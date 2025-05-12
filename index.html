@@ -3,50 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Entendiendo los Gradientes Interactivo</title>
+    <title>Entendiendo los Gradientes Interactivo (MathJax)</title>
     <link rel="stylesheet" href="style.css">
+    <!-- MathJax Configuration -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Delimitadores para matemáticas en línea
+            displayMath: [['$$', '$$'], ['\\[', '\\]']], // Delimitadores para matemáticas en bloque
+            processEscapes: true // Permite usar \$ para mostrar un símbolo de dólar literal
+          },
+          svg: {
+            fontCache: 'global' // Mejora rendimiento en algunos casos, CHTML es otra opción común 'chtml'
+          },
+          options: {
+            skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] // Etiquetas a ignorar
+          }
+        };
+        </script>
+    <!-- MathJax Core Script -->
+    <!-- Usamos la versión 3, cargando el componente que combina entrada TeX y salida SVG -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
 </head>
 <body>
     <div class="container">
         <header>
             <h1>¿Cómo Funcionan los Gradientes? (Interactivo)</h1>
-            <p class="subtitle">Una exploración visual del Descenso de Gradiente.</p>
+            <p class="subtitle">Una exploración visual y matemática del Descenso de Gradiente.</p>
         </header>
 
         <section id="intro">
             <h2>¿Qué es un Gradiente?</h2>
             <p>
-                El <strong>gradiente</strong> de una función en un punto nos indica la dirección de máximo crecimiento de esa función. Imagina estar en una colina: el gradiente apunta hacia la subida más empinada.
+                Matemáticamente, para una función escalar $f$ de múltiples variables $f(x_1, x_2, \dots, x_n)$, su <strong>gradiente</strong> en un punto $\mathbf{x} = [x_1, \dots, x_n]^T$ es un vector que contiene todas sus derivadas parciales de primer orden. Se denota como $\nabla f(\mathbf{x})$:
+                $$
+                \nabla f(\mathbf{x}) = \begin{bmatrix} \frac{\partial f}{\partial x_1} \\ \frac{\partial f}{\partial x_2} \\ \vdots \\ \frac{\partial f}{\partial x_n} \end{bmatrix}
+                $$
+                Este vector $\nabla f(\mathbf{x})$ tiene una propiedad fundamental: <strong>apunta en la dirección de máximo incremento</strong> de la función $f$ en el punto $\mathbf{x}$. Su magnitud, $\| \nabla f(\mathbf{x}) \|$, indica la tasa de ese incremento (la "pendiente" en esa dirección).
             </p>
             <p>
-                En Machine Learning, queremos minimizar una función de "costo" o "pérdida". Para ello, nos movemos en la dirección <strong>opuesta</strong> al gradiente.
+                En el contexto de Machine Learning, $f$ suele ser una <strong>función de pérdida</strong> (o costo), $L(\mathbf{w})$, que mide qué tan mal se desempeña nuestro modelo con los parámetros actuales $\mathbf{w}$. Queremos minimizar esta pérdida.
             </p>
         </section>
 
-        <section id="gradient-descent">
-            <h2>Descenso de Gradiente: Bajando la Colina</h2>
+        <section id="history">
+            <h2>Un Poco de Historia</h2>
             <p>
-                El algoritmo de <strong>Descenso de Gradiente</strong> es un método iterativo para encontrar el mínimo de una función:
-                <ol>
-                    <li>Se parte de un punto inicial (parámetros).</li>
-                    <li>Se calcula el gradiente en ese punto.</li>
-                    <li>Se da un paso en la dirección opuesta al gradiente. El tamaño del paso lo determina la <strong>tasa de aprendizaje (learning rate)</strong>.</li>
-                    <li>Se repiten los pasos 2 y 3 hasta converger a un mínimo (o satisfacer un criterio de parada).</li>
-                </ol>
+                Aunque la idea de usar derivadas para encontrar mínimos o máximos es antigua (Fermat, Newton, Leibniz), el método iterativo que hoy conocemos como <strong>Descenso de Gradiente</strong> tiene sus raíces más claras en el trabajo de <strong>Augustin-Louis Cauchy (1847)</strong>. Cauchy propuso un método para resolver sistemas de ecuaciones que involucraba moverse iterativamente en la dirección opuesta al gradiente.
+            </p>
+            <p>
+                Sin embargo, su popularización y aplicación masiva, especialmente en problemas de gran escala, es mucho más reciente. Con el advenimiento de la computación y el auge del Machine Learning y las redes neuronales profundas en las últimas décadas, el Descenso de Gradiente (y sus variantes como SGD, Adam, RMSprop) se ha convertido en el <strong>algoritmo de optimización por excelencia</strong> para entrenar estos modelos, ajustando millones de parámetros para minimizar funciones de pérdida complejas.
+            </p>
+        </section>
+
+
+        <section id="gradient-descent">
+            <h2>Descenso de Gradiente: La Fórmula Clave</h2>
+            <p>
+                Si el gradiente $\nabla L(\mathbf{w})$ apunta hacia donde la pérdida $L$ aumenta más rápido, para minimizarla debemos movernos en la dirección opuesta: $-\nabla L(\mathbf{w})$. El algoritmo de Descenso de Gradiente actualiza los parámetros $\mathbf{w}$ iterativamente. Si $\mathbf{w}_k$ son los parámetros en la iteración $k$, la actualización para obtener los parámetros $\mathbf{w}_{k+1}$ es:
+                $$
+                \mathbf{w}_{k+1} = \mathbf{w}_k - \eta \nabla L(\mathbf{w}_k)
+                $$
+                Aquí:
+                <ul>
+                    <li>$\mathbf{w}_k$: Vector de parámetros en la iteración $k$.</li>
+                    <li>$\nabla L(\mathbf{w}_k)$: Gradiente de la función de pérdida evaluado en $\mathbf{w}_k$.</li>
+                    <li>$\eta$: La <strong>tasa de aprendizaje (learning rate)</strong>. Es un hiperparámetro (generalmente pequeño y positivo, ej. 0.01, 0.001) que controla el tamaño del paso que damos en cada iteración.</li>
+                </ul>
+                El proceso se repite hasta que los parámetros convergen (cambian muy poco), se alcanza un número máximo de iteraciones, o la pérdida cae por debajo de un umbral.
+            </p>
+            <p>
+                Una tasa de aprendizaje $\eta$ demasiado pequeña hace la convergencia muy lenta. Una $\eta$ demasiado grande puede hacer que los pasos "salten" por encima del mínimo o incluso diverjan.
             </p>
         </section>
 
         <section id="visualization">
-            <h2>Visualización Interactiva</h2>
+            <h2>Visualización Interactiva (1D)</h2>
             <p>
-                La curva azul representa la función f(x) = x² (simplificada). El punto rojo intenta encontrar el mínimo (x=0).
-                <strong>Haz clic en la curva</strong> para establecer un nuevo punto de partida. Usa el <strong>slider</strong> para cambiar la tasa de aprendizaje y observa cómo afecta la velocidad y la precisión del descenso. La flecha indica la dirección del paso (opuesta al gradiente) y el rastro muestra el camino seguido.
+                La simulación muestra el descenso de gradiente para la función simple $f(x) = x^2$. El objetivo es encontrar el valor de $x$ que minimiza $f(x)$, que sabemos es $x=0$.
+                El gradiente (derivada en 1D) es $f'(x) = \frac{df}{dx} = 2x$.
+                La regla de actualización se convierte en:
+                $$
+                x_{k+1} = x_k - \eta (2x_k)
+                $$
+                El punto rojo representa $x_k$ en cada iteración. La flecha verde indica la dirección y magnitud relativa del paso $-\eta \nabla f(x_k) = -\eta (2x_k)$.
+                <strong>Haz clic en la curva</strong> para establecer $x_0$. Usa el <strong>slider</strong> para cambiar $\eta$.
             </p>
-            <canvas id="gradientCanvas" width="600" height="350"></canvas> <!-- Aumenté un poco la altura -->
+            <canvas id="gradientCanvas" width="600" height="350"></canvas>
             <div class="controls">
                  <button id="resetButton">Reiniciar Animación</button>
                  <div class="slider-container">
-                    <label for="lrSlider">Tasa de Aprendizaje:</label>
+                    <label for="lrSlider">Tasa de Aprendizaje ($\eta$):</label>
                     <input type="range" id="lrSlider" name="lrSlider" min="0.001" max="0.1" step="0.001" value="0.01">
                     <span id="lrDisplay">0.010</span>
                  </div>
@@ -57,15 +105,16 @@
          <section id="conclusion">
             <h2>En Resumen</h2>
             <p>
-                El Descenso de Gradiente es un pilar de la optimización en Machine Learning. Ajustando iterativamente los parámetros en la dirección opuesta al gradiente de la función de pérdida, los modelos aprenden a minimizar sus errores. La tasa de aprendizaje es un hiperparámetro crucial que controla este proceso.
+                El gradiente $\nabla f$ nos da la dirección de ascenso más pronunciado de una función $f$. El algoritmo de <strong>Descenso de Gradiente</strong> aprovecha esto moviéndose iterativamente en la dirección opuesta, $-\nabla f$, para encontrar mínimos locales (o globales, si la función es convexa). La regla de actualización fundamental $\mathbf{w}_{k+1} = \mathbf{w}_k - \eta \nabla L(\mathbf{w}_k)$ es la base del entrenamiento de muchos modelos de Machine Learning, permitiéndoles aprender a partir de los datos minimizando una función de pérdida. La elección adecuada de la tasa de aprendizaje $\eta$ es crucial para una convergencia eficiente.
             </p>
         </section>
 
         <footer>
-            <p>Autor: Kitsun.</p> <!-- Atribución actualizada -->
+            <p>Autor: Kitsun.</p>
         </footer>
     </div>
 
+    <!-- Nuestro script de animación (sin cambios) -->
     <script src="script.js"></script>
 </body>
 </html>
