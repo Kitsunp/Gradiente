@@ -1,0 +1,176 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+.container {
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e2e2e2;
+}
+
+header h1 {
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+section {
+    margin-bottom: 25px;
+    padding: 15px;
+    border-left: 4px solid #3498db;
+    background-color: #fdfdfd;
+    border-radius: 4px;
+    opacity: 0; /* Para animación */
+    transform: translateY(10px); /* Para animación */
+    animation: fadeIn 0.6s ease-out forwards;
+}
+
+section h2 {
+    color: #3498db;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+strong {
+    color: #2980b9;
+}
+
+ol {
+    padding-left: 20px;
+}
+
+ol li {
+    margin-bottom: 8px;
+}
+
+#visualization {
+    text-align: center;
+    border-left-color: #e67e22;
+}
+
+#visualization h2 {
+     color: #e67e22;
+}
+
+#gradientCanvas {
+    border: 1px solid #ccc;
+    margin-top: 15px;
+    background-color: #fff;
+    border-radius: 4px;
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: 600 / 350; /* Ajustado a la nueva altura */
+    cursor: crosshair; /* Indica que se puede hacer clic */
+}
+
+.controls {
+    margin-top: 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px; /* Espacio entre controles */
+}
+
+.controls button {
+    padding: 10px 20px;
+    font-size: 1em;
+    background-color: #e67e22;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.controls button:hover {
+    background-color: #d35400;
+}
+
+.slider-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #555;
+    font-size: 0.95em;
+}
+
+#lrSlider {
+    cursor: pointer;
+    width: 150px; /* Ancho del slider */
+}
+
+#lrDisplay {
+    font-weight: bold;
+    color: #333;
+    min-width: 40px; /* Espacio para el número */
+    text-align: right;
+}
+
+#infoText {
+    font-size: 0.85em;
+    color: #777;
+    margin-top: -5px; /* Ajuste fino de espacio */
+}
+
+
+footer {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    font-size: 0.9em;
+    color: #777;
+}
+
+/* Animación sutil de entrada */
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .container {
+        margin: 10px;
+        padding: 15px;
+    }
+
+    header h1 {
+        font-size: 1.6em;
+    }
+
+    section h2 {
+        font-size: 1.2em;
+    }
+
+    .slider-container {
+        flex-direction: column; /* Apilar slider y texto en pantallas pequeñas */
+        gap: 5px;
+    }
+
+    #lrSlider {
+        width: 80%;
+    }
+}

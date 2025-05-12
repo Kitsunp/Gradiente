@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entendiendo los Gradientes Interactivo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>¿Cómo Funcionan los Gradientes? (Interactivo)</h1>
+            <p class="subtitle">Una exploración visual del Descenso de Gradiente.</p>
+        </header>
+
+        <section id="intro">
+            <h2>¿Qué es un Gradiente?</h2>
+            <p>
+                El <strong>gradiente</strong> de una función en un punto nos indica la dirección de máximo crecimiento de esa función. Imagina estar en una colina: el gradiente apunta hacia la subida más empinada.
+            </p>
+            <p>
+                En Machine Learning, queremos minimizar una función de "costo" o "pérdida". Para ello, nos movemos en la dirección <strong>opuesta</strong> al gradiente.
+            </p>
+        </section>
+
+        <section id="gradient-descent">
+            <h2>Descenso de Gradiente: Bajando la Colina</h2>
+            <p>
+                El algoritmo de <strong>Descenso de Gradiente</strong> es un método iterativo para encontrar el mínimo de una función:
+                <ol>
+                    <li>Se parte de un punto inicial (parámetros).</li>
+                    <li>Se calcula el gradiente en ese punto.</li>
+                    <li>Se da un paso en la dirección opuesta al gradiente. El tamaño del paso lo determina la <strong>tasa de aprendizaje (learning rate)</strong>.</li>
+                    <li>Se repiten los pasos 2 y 3 hasta converger a un mínimo (o satisfacer un criterio de parada).</li>
+                </ol>
+            </p>
+        </section>
+
+        <section id="visualization">
+            <h2>Visualización Interactiva</h2>
+            <p>
+                La curva azul representa la función f(x) = x² (simplificada). El punto rojo intenta encontrar el mínimo (x=0).
+                <strong>Haz clic en la curva</strong> para establecer un nuevo punto de partida. Usa el <strong>slider</strong> para cambiar la tasa de aprendizaje y observa cómo afecta la velocidad y la precisión del descenso. La flecha indica la dirección del paso (opuesta al gradiente) y el rastro muestra el camino seguido.
+            </p>
+            <canvas id="gradientCanvas" width="600" height="350"></canvas> <!-- Aumenté un poco la altura -->
+            <div class="controls">
+                 <button id="resetButton">Reiniciar Animación</button>
+                 <div class="slider-container">
+                    <label for="lrSlider">Tasa de Aprendizaje:</label>
+                    <input type="range" id="lrSlider" name="lrSlider" min="0.001" max="0.1" step="0.001" value="0.01">
+                    <span id="lrDisplay">0.010</span>
+                 </div>
+                 <p id="infoText">Posición inicial aleatoria. Haz clic en la curva para cambiarla.</p>
+            </div>
+        </section>
+
+         <section id="conclusion">
+            <h2>En Resumen</h2>
+            <p>
+                El Descenso de Gradiente es un pilar de la optimización en Machine Learning. Ajustando iterativamente los parámetros en la dirección opuesta al gradiente de la función de pérdida, los modelos aprenden a minimizar sus errores. La tasa de aprendizaje es un hiperparámetro crucial que controla este proceso.
+            </p>
+        </section>
+
+        <footer>
+            <p>Autor: Kitsun.</p> <!-- Atribución actualizada -->
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
