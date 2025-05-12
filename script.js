@@ -1,257 +1,380 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const canvas = document.getElementById('gradientCanvas');
-    const ctx = canvas.getContext('2d');
-    const resetButton = document.getElementById('resetButton');
-    const lrSlider = document.getElementById('lrSlider');
-    const lrDisplay = document.getElementById('lrDisplay');
-    const infoText = document.getElementById('infoText');
+    // --- Objeto para gestionar las animaciones ---
+    const gradientAnimations = {};
+    // --- Estado Global ---
+    let activeAnimationId = null; // ID del capítulo cuya animación está activa
 
-    // --- Parámetros Configurables ---
-    let learningRate = parseFloat(lrSlider.value); // Tasa de aprendizaje inicial desde el slider
-    let currentX = getRandomStartX(); // Posición inicial en el eje X
-    const targetX = 0; // El mínimo de la función x^2 está en x=0
-    const scale = 50; // Escala visual en el canvas
-    const offsetX = canvas.width / 2;
-    const offsetY = canvas.height * 0.85; // Ajustado para nueva altura y mejor visualización
-    const precision = 0.001; // Criterio de convergencia más fino
-    const maxHistory = 100; // Máximo de puntos en el historial
-    const vectorScale = 2000; // Factor para escalar la longitud del vector de descenso (ajustar según sea necesario)
-    const maxVectorLen = 30; // Longitud máxima visual del vector
-    // --- Estado de la Animación ---
-    let animationFrameId = null;
-    let historyPoints = []; // Array para guardar el rastro
+    // --- Constantes y Configuraciones Comunes ---
+    const commonConfig = {
+        scale: 50,
+        precision: 0.0001, // Mayor precisión para convergencia
+        maxHistory: 150, // Más historial
+        vectorScaleFactor: 2000,
+        maxVectorLen: 35,
+        defaultLR: 0.1,
+        axesColor: '#ccc',
+        funcColor: '#3498db',
+        pointColor: '#e74c3c',
+        historyColor: 'rgba(230, 126, 34, 0.7)',
+        vectorColor: '#2ecc71',
+        maxIterations: 1000 // Aumentado
+    };
 
-    // --- Funciones Matemáticas ---
-    // Función a minimizar: f(x) = x^2
-    function objectiveFunction(x) {
-        return x * x;
-    }
-    // Gradiente de la función: f'(x) = 2x
-    function gradient(x) {
-        return 2 * x;
-    }
-
-    // --- Funciones Auxiliares ---
-    function getRandomStartX() {
-        // Devuelve un valor inicial entre -5 y 5, excluyendo la zona cercana al mínimo
-        let start = (Math.random() - 0.5) * 10; // Entre -5 y 5
-        return Math.abs(start) < 0.5 ? (start < 0 ? -0.5 : 0.5) : start; // Evita empezar muy cerca de 0
-    }
-
-    function worldToCanvas(x, y) {
+    // --- Funciones de Utilidad ---
+    function worldToCanvas(x, y, config) {
         return {
-            x: offsetX + x * scale,
-            y: offsetY - y * scale
+            x: config.offsetX + x * config.scale,
+            y: config.offsetY - y * config.scale
         };
     }
 
-    function canvasToWorldX(canvasX) {
-        return (canvasX - offsetX) / scale;
+    function canvasToWorldX(canvasX, config) {
+        return (canvasX - config.offsetX) / config.scale;
     }
 
-    // --- Funciones de Dibujo ---
-    function drawAxes() {
-        ctx.strokeStyle = '#ccc';
+    function getRandomStartX(min = -5, max = 5, avoidZone = 0.5) {
+        let start = min + Math.random() * (max - min);
+        return Math.abs(start) < avoidZone ? (start < 0 ? -avoidZone : avoidZone) : start;
+    }
+
+    // --- Funciones de Dibujo Comunes ---
+    function drawAxes(ctx, config) {
+        ctx.save(); // Guardar estado del contexto
+        ctx.strokeStyle = config.axesColor;
         ctx.lineWidth = 1;
         ctx.beginPath();
-        // Eje X
-        ctx.moveTo(0, offsetY);
-        ctx.lineTo(canvas.width, offsetY);
-        // Eje Y
-        ctx.moveTo(offsetX, 0);
-        ctx.lineTo(offsetX, canvas.height);
-        ctx.stroke();
-
-        // Marcas en los ejes (opcional)
-        ctx.fillStyle = '#aaa';
+        ctx.moveTo(0, config.offsetY); ctx.lineTo(config.canvas.width, config.offsetY); // X axis
+        ctx.moveTo(config.offsetX, 0); ctx.lineTo(config.offsetX, config.canvas.height); // Y axis
+        // Add ticks and labels (optional improvement)
         ctx.font = '10px Arial';
-        for(let x = -Math.floor(offsetX / scale); x <= Math.floor(offsetX / scale); x++) {
-             if (x === 0) continue;
-             const pos = worldToCanvas(x, 0);
-             ctx.fillText(x.toString(), pos.x - (x < 0 ? 8: 4) , pos.y + 12);
-             ctx.fillRect(pos.x - 0.5, pos.y - 2, 1, 4); // Tick mark
+        ctx.fillStyle = '#999';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        const xRange = config.canvas.width / config.scale;
+        for (let x = Math.ceil(-xRange/2); x <= Math.floor(xRange/2); x++) {
+            if (x === 0) continue;
+            const canvasX = config.offsetX + x * config.scale;
+            ctx.moveTo(canvasX, config.offsetY - 3);
+            ctx.lineTo(canvasX, config.offsetY + 3);
+            ctx.fillText(x.toString(), canvasX, config.offsetY + 5);
         }
+        // Similar ticks for Y axis could be added
+        ctx.stroke();
+        ctx.restore(); // Restaurar estado
     }
 
-    function drawFunctionCurve() {
-        ctx.strokeStyle = '#3498db'; // Azul
-        ctx.lineWidth = 2;
+    function drawFunctionCurve(ctx, config, objectiveFunc) {
+         ctx.save();
+        ctx.strokeStyle = config.funcColor;
+        ctx.lineWidth = 2.5; // Slightly thicker line
         ctx.beginPath();
         let firstPoint = true;
-        for (let plotX = -offsetX / scale; plotX <= (canvas.width - offsetX) / scale; plotX += 0.05) {
-            const canvasCoords = worldToCanvas(plotX, objectiveFunction(plotX));
+        const minX = canvasToWorldX(0, config);
+        const maxX = canvasToWorldX(config.canvas.width, config);
+        const step = (maxX - minX) / config.canvas.width; // Step per pixel
+
+        for (let plotX = minX; plotX <= maxX; plotX += step) {
+            const worldY = objectiveFunc(plotX);
+            // Simple clipping to avoid extreme values messing up the plot
+            const canvasY = config.offsetY - worldY * config.scale;
+             if (canvasY < -config.canvas.height || canvasY > config.canvas.height * 2) { // Generous bounds
+                 // If previous point was valid, end the line segment
+                 if (!firstPoint) ctx.stroke();
+                 firstPoint = true; // Treat next valid point as start of new segment
+                 continue;
+            }
+
+            const canvasX = config.offsetX + plotX * config.scale;
             if (firstPoint) {
-                ctx.moveTo(canvasCoords.x, canvasCoords.y);
+                ctx.moveTo(canvasX, canvasY);
                 firstPoint = false;
             } else {
-                ctx.lineTo(canvasCoords.x, canvasCoords.y);
+                ctx.lineTo(canvasX, canvasY);
             }
         }
         ctx.stroke();
+        ctx.restore();
     }
 
-    function drawHistory() {
+     function drawHistory(ctx, config, historyPoints) {
+        ctx.save();
         for (let i = 0; i < historyPoints.length; i++) {
             const point = historyPoints[i];
-            const alpha = 0.1 + 0.7 * (i / historyPoints.length); // Fade out older points
-            ctx.fillStyle = `rgba(230, 126, 34, ${alpha})`; // Naranja semi-transparente
+            const alpha = 0.1 + 0.7 * (i / historyPoints.length);
+            const colorMatch = config.historyColor.match(/rgba?\((\d+), (\d+), (\d+)(?:, ([\d\.]+))?\)/);
+            if (colorMatch) {
+                 ctx.fillStyle = `rgba(${colorMatch[1]}, ${colorMatch[2]}, ${colorMatch[3]}, ${alpha})`;
+            } else {
+                 ctx.fillStyle = config.historyColor;
+            }
             ctx.beginPath();
-            ctx.arc(point.x, point.y, 2, 0, Math.PI * 2);
+            ctx.arc(point.x, point.y, 3, 0, Math.PI * 2); // Slightly larger history points
             ctx.fill();
         }
+        ctx.restore();
     }
 
-    function drawCurrentPointAndVector(x) {
-        const y = objectiveFunction(x);
-        const canvasPos = worldToCanvas(x, y);
+    function drawCurrentPointAndVector(ctx, config, currentX, currentY, gradX, learningRate) {
+        ctx.save();
+        const canvasPos = worldToCanvas(currentX, currentY, config);
 
-        // Dibujar el punto actual
-        ctx.fillStyle = '#e74c3c'; // Rojo
+        // Draw Point
+        ctx.fillStyle = config.pointColor;
         ctx.beginPath();
-        ctx.arc(canvasPos.x, canvasPos.y, 6, 0, Math.PI * 2);
+        ctx.arc(canvasPos.x, canvasPos.y, 7, 0, Math.PI * 2); // Larger point
         ctx.fill();
-        ctx.strokeStyle = '#c0392b'; // Borde más oscuro
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#a5281b'; // Darker red border
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
+        // Draw Descent Vector
+        const descentDirX = -gradX;
+        let stepSize = descentDirX * learningRate;
+        let vectorLen = Math.abs(stepSize * config.vectorScaleFactor);
+        vectorLen = Math.min(vectorLen, config.maxVectorLen);
 
-        // Calcular y dibujar el vector de descenso (opuesto al gradiente)
-        const grad = gradient(x);
-        const descentDirX = -grad; // Dirección opuesta al gradiente
-        // No hay componente Y en el gradiente de f(x)=x^2, pero visualizamos la dirección del *paso*
-        // La longitud visual del vector será proporcional al cambio en X
-        let vectorLen = Math.abs(descentDirX * learningRate * vectorScale);
-        vectorLen = Math.min(vectorLen, maxVectorLen); // Limitar longitud visual
+        if (vectorLen > 1) {
+            const angle = stepSize > 0 ? 0 : Math.PI;
+            ctx.strokeStyle = config.vectorColor;
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(canvasPos.x, canvasPos.y);
+            const endX = canvasPos.x + vectorLen * Math.cos(angle);
+            const endY = canvasPos.y;
+            ctx.lineTo(endX, endY);
+            // Arrowhead
+            const arrowSize = 6;
+            ctx.lineTo(endX - arrowSize * Math.cos(angle - Math.PI / 6), endY - arrowSize * Math.sin(angle - Math.PI / 6));
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(endX - arrowSize * Math.cos(angle + Math.PI / 6), endY - arrowSize * Math.sin(angle + Math.PI / 6));
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
 
-        if (vectorLen > 1) { // Solo dibujar si es visible
-             const angle = descentDirX > 0 ? 0 : Math.PI; // Apunta a la derecha si grad < 0, izquierda si grad > 0
+    // --- Base Animation Class/Factory ---
+    function createBaseAnimation(chapterId, customConfig = {}) {
+        const canvas = document.getElementById(`canvas-${chapterId}`);
+        const controlsDiv = document.getElementById(`controls-${chapterId}`);
+        const lrSlider = controlsDiv.querySelector('input[id^="lrSlider-"]');
+        const lrDisplay = controlsDiv.querySelector('.lrDisplay');
+        const infoText = controlsDiv.querySelector('.infoText');
 
-             ctx.strokeStyle = '#2ecc71'; // Verde para el vector de descenso
-             ctx.lineWidth = 2;
-             ctx.beginPath();
-             ctx.moveTo(canvasPos.x, canvasPos.y);
-             const endX = canvasPos.x + vectorLen * Math.cos(angle);
-             const endY = canvasPos.y; // El paso es solo horizontal en este caso
-             ctx.lineTo(endX, endY);
+        if (!canvas || !lrSlider) {
+            console.error(`Elementos no encontrados para el capítulo ${chapterId}`);
+            return null;
+        }
 
-             // Punta de la flecha (simple)
-             const arrowSize = 5;
-             ctx.lineTo(endX - arrowSize * Math.cos(angle - Math.PI / 6), endY - arrowSize * Math.sin(angle - Math.PI / 6));
-             ctx.moveTo(endX, endY);
-             ctx.lineTo(endX - arrowSize * Math.cos(angle + Math.PI / 6), endY - arrowSize * Math.sin(angle + Math.PI / 6));
+        const ctx = canvas.getContext('2d');
+        const config = {
+            ...commonConfig,
+            canvas: canvas,
+            ctx: ctx,
+            offsetX: canvas.width / 2,
+            offsetY: canvas.height * 0.85, // Default, can be overridden
+            targetX: 0, // Default, can be overridden
+            objectiveFunction: x => x * x, // Default
+            gradientFunction: x => 2 * x, // Default
+            ...customConfig // Override defaults with chapter-specific settings
+        };
 
-             ctx.stroke();
+        let state = {
+            currentX: getRandomStartX(config.startXMin ?? -4, config.startXMax ?? 4, 0.5),
+            learningRate: parseFloat(lrSlider.value),
+            historyPoints: [],
+            animationFrameId: null,
+            iteration: 0,
+            noiseLevel: 0, // For SGD
+            isRunning: false
+        };
+
+        // Specific sliders for SGD and Challenges
+        const noiseSlider = controlsDiv.querySelector('input[id^="noiseSlider-"]');
+        const noiseDisplay = controlsDiv.querySelector('.noiseDisplay');
+        if (noiseSlider && noiseDisplay) {
+            state.noiseLevel = parseFloat(noiseSlider.value);
+            noiseSlider.addEventListener('input', () => {
+                 state.noiseLevel = parseFloat(noiseSlider.value);
+                 noiseDisplay.textContent = state.noiseLevel.toFixed(1);
+                 if (!state.isRunning) draw(); // Update display if not running
+            });
         }
 
 
-        // Mostrar info del punto actual
-        ctx.fillStyle = '#333';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText(`x = ${x.toFixed(3)}`, canvasPos.x + 10, canvasPos.y - 10);
-        ctx.fillText(`f(x) = ${y.toFixed(3)}`, canvasPos.x + 10, canvasPos.y + 5);
-        ctx.fillText(`∇f(x) = ${grad.toFixed(3)}`, canvasPos.x + 10, canvasPos.y + 20);
-    }
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawAxes(ctx, config);
+            drawFunctionCurve(ctx, config, config.objectiveFunction);
+            drawHistory(ctx, config, state.historyPoints);
+            const currentY = config.objectiveFunction(state.currentX);
+            const gradX = config.gradientFunction(state.currentX);
+            drawCurrentPointAndVector(ctx, config, state.currentX, currentY, gradX, state.learningRate);
 
-    // --- Función Principal de Dibujo ---
-    function draw() {
-        // Limpiar canvas
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        drawAxes();
-        drawFunctionCurve();
-        drawHistory(); // Dibujar rastro antes del punto actual
-        drawCurrentPointAndVector(currentX);
-    }
-
-    // --- Lógica de la Animación ---
-    function update() {
-        const grad = gradient(currentX);
-        const previousX = currentX;
-
-        // Guardar posición actual (en coords de canvas) para el historial ANTES de actualizar
-        const currentCanvasPos = worldToCanvas(currentX, objectiveFunction(currentX));
-        historyPoints.push({ x: currentCanvasPos.x, y: currentCanvasPos.y });
-        if (historyPoints.length > maxHistory) {
-            historyPoints.shift(); // Eliminar el punto más antiguo
+            // Update info text
+            let status = state.isRunning ? `Iter: ${state.iteration}` : "Pausado";
+             let noiseInfo = noiseSlider ? `, Ruido: ${state.noiseLevel.toFixed(1)}` : "";
+             infoText.textContent = `${status}, x=${state.currentX.toFixed(3)}, f(x)=${currentY.toFixed(3)}, ∇f(x)=${gradX.toFixed(3)}, η=${state.learningRate.toFixed(3)}${noiseInfo}`;
         }
 
-        // Actualizar posición usando Descenso de Gradiente
-        currentX = currentX - learningRate * grad;
+        function update() {
+            if (!state.isRunning) return; // Exit if stopped externally
 
-        draw(); // Volver a dibujar todo
+            let gradX = config.gradientFunction(state.currentX);
+            const previousX = state.currentX;
 
-        // Condición de parada
-        const change = Math.abs(currentX - previousX);
-        const distToTarget = Math.abs(currentX - targetX);
+            // Add noise for SGD
+            if (chapterId === 'sgd' && state.noiseLevel > 0) {
+                 // Noise proportional to gradient magnitude can feel more natural
+                 const noise = (Math.random() - 0.5) * 2 * state.noiseLevel * (Math.abs(gradX) + 0.1); // Add small base noise
+                 gradX += noise;
+            }
 
-        if (change < precision || distToTarget < precision / 10) {
-             console.log(`Convergencia alcanzada en x = ${currentX.toFixed(4)} (cambio: ${change.toFixed(5)})`);
-             infoText.textContent = `Convergencia alcanzada en x ≈ ${currentX.toFixed(3)}`;
-             cancelAnimationFrame(animationFrameId); // Detener la animación
-             animationFrameId = null;
-             return;
+            // Store history (canvas coords)
+            const currentY = config.objectiveFunction(state.currentX);
+            const canvasPos = worldToCanvas(state.currentX, currentY, config);
+            state.historyPoints.push({ x: canvasPos.x, y: canvasPos.y });
+            if (state.historyPoints.length > config.maxHistory) {
+                state.historyPoints.shift();
+            }
+
+            // Update position
+            state.currentX = state.currentX - state.learningRate * gradX;
+            state.iteration++;
+
+            draw(); // Redraw
+
+            // Stopping condition
+            const change = Math.abs(state.currentX - previousX);
+            // Check for NaN or Infinity
+             if (isNaN(state.currentX) || !isFinite(state.currentX)) {
+                 console.warn(`${chapterId}: Divergencia detectada (valor no numérico)`);
+                 infoText.textContent = `¡Divergencia! Valor de x no válido en iter ${state.iteration}. Prueba η más pequeña.`;
+                 stop();
+                 return;
+             }
+            // Check max iterations or precision
+             if (state.iteration >= config.maxIterations || change < config.precision) {
+                 const reason = (state.iteration >= config.maxIterations ? "Max iteraciones" : "Convergencia");
+                 console.log(`${chapterId}: ${reason} en x = ${state.currentX.toFixed(4)} (cambio: ${change.toExponential(2)})`);
+                 infoText.textContent = `${reason}! x ≈ ${state.currentX.toFixed(3)} en ${state.iteration} iter.`;
+                 stop(); // Stop animation but keep final state drawn
+                 return;
+             }
+
+            state.animationFrameId = requestAnimationFrame(update);
         }
 
-        // Solicitar el siguiente frame
-        animationFrameId = requestAnimationFrame(update);
-    }
+        function start(startX = null) {
+            stop(); // Ensure any previous run is stopped
+            state.isRunning = true;
+            state.currentX = (startX !== null && isFinite(startX)) ? startX : getRandomStartX(config.startXMin ?? -4, config.startXMax ?? 4, 0.5);
+            state.historyPoints = [];
+            state.iteration = 0;
+            state.learningRate = parseFloat(lrSlider.value);
+            lrDisplay.textContent = state.learningRate.toFixed(3);
+             if (noiseSlider) state.noiseLevel = parseFloat(noiseSlider.value); // Ensure noise level is current
 
-    // Iniciar/Reiniciar la animación
-    function startAnimation(startX = null) {
-        // Cancelar cualquier animación previa
-        if (animationFrameId) {
-            cancelAnimationFrame(animationFrameId);
-            animationFrameId = null;
+            console.log(`${chapterId}: Iniciando desde x = ${state.currentX.toFixed(3)}, LR = ${state.learningRate}${noiseSlider ? ', Ruido = '+state.noiseLevel : ''}`);
+            infoText.textContent = `Iniciando desde x ≈ ${state.currentX.toFixed(2)}...`;
+
+            draw(); // Draw initial state
+            state.animationFrameId = requestAnimationFrame(update);
+            activeAnimationId = chapterId; // Mark this as the active animation
         }
 
-        // Reiniciar estado
-        currentX = (startX !== null) ? startX : getRandomStartX();
-        historyPoints = []; // Limpiar historial
-        learningRate = parseFloat(lrSlider.value); // Asegurar que usa el valor actual del slider
-        lrDisplay.textContent = learningRate.toFixed(3); // Actualizar display
-        infoText.textContent = `Iniciando desde x ≈ ${currentX.toFixed(2)}. Tasa Aprendizaje: ${learningRate.toFixed(3)}`;
-        console.log(`Iniciando animación desde x = ${currentX.toFixed(3)} con LR = ${learningRate}`);
+        function stop() {
+            state.isRunning = false;
+            if (state.animationFrameId) {
+                cancelAnimationFrame(state.animationFrameId);
+                state.animationFrameId = null;
+            }
+            if (activeAnimationId === chapterId) {
+                activeAnimationId = null;
+            }
+            // Do not clear the final state, just stop the loop
+            // Optionally update info text to 'Pausado' or similar
+            // draw(); // Redraw in stopped state if needed
+        }
 
-        draw(); // Dibujar estado inicial inmediatamente
+        // --- Event Listeners Specific to this Instance ---
+        lrSlider.addEventListener('input', () => {
+            state.learningRate = parseFloat(lrSlider.value);
+            lrDisplay.textContent = state.learningRate.toFixed(3);
+            if (!state.isRunning) {
+                 draw(); // Update static drawing if LR changes while paused
+                 infoText.textContent = `Ajustado η = ${state.learningRate.toFixed(3)}. Haz clic para iniciar.`;
+            }
+        });
 
-        // Empezar el bucle de animación
-        animationFrameId = requestAnimationFrame(update);
+        canvas.addEventListener('click', (event) => {
+             if (activeAnimationId && activeAnimationId !== chapterId) {
+                 gradientAnimations[activeAnimationId]?.stop(); // Stop other active animation
+             }
+             const rect = canvas.getBoundingClientRect();
+             const canvasX = event.clientX - rect.left;
+             const clickedWorldX = canvasToWorldX(canvasX, config);
+             // Simple check to avoid starting at extreme values if function shoots off
+             if(isFinite(clickedWorldX)) {
+                start(clickedWorldX);
+             }
+        });
+
+        // Public interface for this animation instance
+        return {
+            start,
+            stop,
+            draw, // Expose draw for initial static render
+            config, // Expose config if needed elsewhere
+            state // Expose state if needed elsewhere (use with caution)
+        };
     }
 
-    // --- Event Listeners ---
-    resetButton.addEventListener('click', () => startAnimation());
+    // --- Initialize Animations for Relevant Chapters ---
+    const chaptersToAnimate = {
+        'batch-gd': {}, // Uses defaults
+        'learning-rate': { targetX: 0 }, // Specify target just in case
+        'sgd': { // Needs noise slider logic (handled inside base class now)
+             targetX: 0
+         },
+        'challenges': {
+            // Function: f(x) = 0.1x^4 - 1.5x^2 + 0.5x + 4
+            // Derivative: f'(x) = 0.4x^3 - 3x + 0.5
+            objectiveFunction: x => 0.1 * Math.pow(x, 4) - 1.5 * Math.pow(x, 2) + 0.5 * x + 4,
+            gradientFunction: x => 0.4 * Math.pow(x, 3) - 3 * x + 0.5,
+            offsetY: 350, // Adjust Y offset to center the function vertically
+            scale: 45,     // Adjust scale to fit the function horizontally/vertically
+            startXMin: -4.5, // Wider start range
+            startXMax: 4.5,
+            targetX: null // No single target X for this function
+        }
+    };
 
-    lrSlider.addEventListener('input', () => {
-        learningRate = parseFloat(lrSlider.value);
-        lrDisplay.textContent = learningRate.toFixed(3);
-         // Si la animación está corriendo, la nueva LR se usará en el próximo paso 'update'
-         // Si no está corriendo, actualizamos el texto informativo
-         if (!animationFrameId) {
-             infoText.textContent = `Tasa de Aprendizaje ajustada a ${learningRate.toFixed(3)}. Haz clic o reinicia.`;
-             // Podríamos redibujar el vector estático si quisiéramos: draw();
-         } else {
-              infoText.textContent = `Descendiendo... Tasa Aprendizaje: ${learningRate.toFixed(3)}`;
-         }
+    document.querySelectorAll('.start-animation-btn').forEach(button => {
+        const chapterId = button.dataset.chapter;
+        if (chapterId && chaptersToAnimate[chapterId]) {
+            gradientAnimations[chapterId] = createBaseAnimation(chapterId, chaptersToAnimate[chapterId]);
+            if (gradientAnimations[chapterId]) {
+                gradientAnimations[chapterId].draw(); // Draw initial static frame
+            } else {
+                 console.error(`Fallo al inicializar la animación para ${chapterId}`);
+            }
+
+            button.addEventListener('click', () => {
+                 if (activeAnimationId && activeAnimationId !== chapterId) {
+                     gradientAnimations[activeAnimationId]?.stop();
+                 }
+                 gradientAnimations[chapterId]?.start();
+            });
+        }
     });
 
-    canvas.addEventListener('click', (event) => {
-        const rect = canvas.getBoundingClientRect();
-        const canvasX = event.clientX - rect.left;
-        // const canvasY = event.clientY - rect.top; // No necesitamos Y para iniciar
-
-        const clickedWorldX = canvasToWorldX(canvasX);
-
-        // Opcional: Limitar el rango donde se puede iniciar
-        const maxStartX = (canvas.width - offsetX) / scale * 0.95; // Un poco dentro de los bordes
-        const minStartX = -offsetX / scale * 0.95;
-        const clampedX = Math.max(minStartX, Math.min(maxStartX, clickedWorldX));
-
-        console.log(`Clic detectado en canvas (${canvasX.toFixed(0)}), corresponde a x ≈ ${clampedX.toFixed(3)}`);
-        startAnimation(clampedX); // Iniciar animación desde el punto clickeado
+    // Stop animation if user navigates away
+    window.addEventListener('beforeunload', () => {
+        if (activeAnimationId && gradientAnimations[activeAnimationId]) {
+            gradientAnimations[activeAnimationId].stop();
+        }
     });
 
-    // --- Inicio ---
-    startAnimation(); // Iniciar la animación al cargar la página
+    console.log("Guía Interactiva de Descenso de Gradiente Inicializada. Animaciones disponibles:", Object.keys(gradientAnimations));
 
-});
+}); // End DOMContentLoaded
