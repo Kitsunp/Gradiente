@@ -11,28 +11,28 @@
     --success-color: #27ae60; /* Verde para éxito/bueno */
     --warning-color: #f1c40f; /* Amarillo para advertencia/justo */
     --danger-color: #c0392b; /* Rojo para peligro/malo */
-    --sidebar-width: 230px; /* Ligeramente más ancho */
-    --header-height: 70px; /* Estimado */
+    --sidebar-width: 240px; /* Ligeramente más ancho */
+    --header-height: 70px;
 }
 
 *, *::before, *::after {
-    box-sizing: border-box; /* Mejor manejo de padding y border */
+    box-sizing: border-box;
 }
 
 html {
-    scroll-behavior: smooth; /* Desplazamiento suave al hacer clic en anclas */
-    scroll-padding-top: 20px; /* Espacio al navegar con anclas (ajusta según header fijo si hubiera) */
+    scroll-behavior: smooth;
+    scroll-padding-top: 20px;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; /* Fuentes de sistema modernas */
-    line-height: 1.7;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    line-height: 1.75; /* Más espaciado de línea */
     margin: 0;
     padding: 0;
     background-color: var(--bg-color);
     color: var(--text-color);
-    display: flex; /* Layout con sidebar */
-    font-size: 16px; /* Base font size */
+    display: flex;
+    font-size: 16.5px; /* Ligeramente más grande */
 }
 
 /* --- Sidebar Navigation --- */
@@ -41,14 +41,14 @@ body {
     background-color: var(--secondary-color);
     color: var(--bg-color);
     padding: 25px 15px;
-    height: 100vh; /* Altura completa */
-    position: fixed; /* Fijo en la pantalla */
+    height: 100vh;
+    position: fixed;
     left: 0;
     top: 0;
-    overflow-y: auto; /* Scroll si es necesario */
+    overflow-y: auto;
     border-right: 4px solid var(--primary-color);
     box-shadow: 3px 0 6px rgba(0,0,0,0.1);
-    z-index: 100; /* Asegurar que esté por encima del contenido al hacer scroll */
+    z-index: 1000; /* Asegurar que esté por encima de todo */
 }
 
 .sidebar h3 {
@@ -58,7 +58,7 @@ body {
     border-bottom: 1px solid var(--light-text);
     padding-bottom: 15px;
     margin-bottom: 25px;
-    font-size: 1.25em;
+    font-size: 1.3em;
     font-weight: 600;
 }
 
@@ -70,43 +70,35 @@ body {
 
 .sidebar ul li a {
     display: block;
-    color: #dfe6e9; /* Texto de enlace ligeramente más claro */
+    color: #dfe6e9;
     text-decoration: none;
     padding: 12px 18px;
     margin-bottom: 6px;
     border-radius: 5px;
     transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, transform 0.1s ease;
     font-size: 0.98em;
-    border-left: 3px solid transparent; /* Para efecto hover/active */
+    border-left: 3px solid transparent;
 }
 
 .sidebar ul li a:hover,
 .sidebar ul li a:focus {
-    background-color: rgba(52, 152, 219, 0.2); /* Fondo azul translúcido */
+    background-color: rgba(52, 152, 219, 0.25); /* Un poco más opaco */
     color: var(--content-bg);
-    border-left-color: var(--accent-color); /* Borde naranja */
-    transform: translateX(3px);
-    outline: none; /* Quitar outline por defecto en focus */
+    border-left-color: var(--accent-color);
+    transform: translateX(4px); /* Mayor desplazamiento */
+    outline: none;
 }
 
 /* --- Main Content Area --- */
 .main-content {
-    margin-left: var(--sidebar-width); /* Dejar espacio para la sidebar */
-    padding: 30px 50px; /* Más padding horizontal */
-    flex-grow: 1; /* Ocupar espacio restante */
-    /* Control del ancho máximo para legibilidad en pantallas anchas */
-    max-width: 950px;
-    /* Centrado horizontal cuando la ventana es más ancha que max-width + sidebar-width */
+    margin-left: var(--sidebar-width);
+    padding: 35px 55px; /* Más padding */
+    flex-grow: 1;
+    max-width: 1000px; /* Aumentado ligeramente */
     margin-right: auto;
-    margin-top: 20px; /* Espacio superior */
-    margin-bottom: 50px; /* Espacio inferior */
+    margin-top: 20px;
+    margin-bottom: 50px;
 }
-
-/* Nota sobre el espacio vacío a la derecha en pantallas anchas:
-   Se mantiene un max-width en .main-content para evitar líneas de texto
-   excesivamente largas, lo cual perjudica la legibilidad. El espacio vacío
-   es preferible a un texto difícil de leer. Podría aumentarse el max-width
-   si se desea, pero con precaución. */
 
 header {
     text-align: center;
@@ -118,14 +110,14 @@ header {
 header h1 {
     color: var(--secondary-color);
     margin-bottom: 8px;
-    font-size: 2.5em;
+    font-size: 2.6em; /* Más grande */
     font-weight: 600;
 }
 
 .subtitle {
     color: var(--light-text);
     font-style: italic;
-    font-size: 1.15em;
+    font-size: 1.2em;
 }
 
 /* --- Chapter Styling --- */
@@ -133,11 +125,10 @@ header h1 {
     background-color: var(--content-bg);
     border: 1px solid #dfe6e9;
     border-left: 6px solid var(--primary-color);
-    padding: 30px 35px;
-    margin-bottom: 40px;
-    border-radius: 6px;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
-    /* scroll-margin-top ya está en html */
+    padding: 30px 40px; /* Más padding interno */
+    margin-bottom: 45px;
+    border-radius: 8px; /* Más redondeado */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
 }
 
 .chapter:nth-of-type(even) {
@@ -148,16 +139,63 @@ header h1 {
 .chapter h2 {
     color: var(--secondary-color);
     margin-top: 0;
-    margin-bottom: 25px;
-    padding-bottom: 12px;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
     border-bottom: 1px solid #eee;
-    font-size: 1.8em;
+    font-size: 1.9em;
     font-weight: 600;
 }
 
-/* --- Animation Area Styling --- */
-.animation-container {
-    margin-top: 30px;
+/* --- Tabs for Animation/Static --- */
+.visualization-tabs {
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 5px;
+}
+
+.tab-button {
+    background-color: transparent;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 1.05em;
+    color: var(--light-text);
+    margin-right: 5px;
+    border-bottom: 3px solid transparent;
+    transition: color 0.3s, border-bottom-color 0.3s;
+}
+
+.tab-button.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    font-weight: 600;
+}
+
+.tab-button:hover {
+    color: var(--secondary-color);
+}
+
+.tab-content {
+    display: none; /* Oculto por defecto */
+    padding-top: 15px;
+}
+
+.tab-content.active {
+    display: block; /* Mostrar contenido activo */
+}
+
+.tab-content h4 { /* Título para sección Animación/Estática */
+    font-size: 1.2em;
+    color: var(--secondary-color);
+    margin-top: 0;
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+
+/* --- Animation & Static Container Styling --- */
+.animation-container, .static-container {
+    margin-top: 20px; /* Reducido por el tab */
     padding: 25px;
     border: 1px dashed var(--border-color);
     border-radius: 6px;
@@ -176,6 +214,7 @@ canvas {
     margin-left: auto;
     margin-right: auto;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    cursor: crosshair; /* Para indicar que se puede hacer clic */
 }
 
 .controls {
@@ -183,14 +222,20 @@ canvas {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 18px; /* Más espacio entre controles */
+    gap: 18px;
 }
 
-.controls button.start-animation-btn {
-    padding: 12px 28px;
-    font-size: 1.1em;
+.control-row { /* Para agrupar botones como Iniciar/Pausar/Reiniciar */
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap; /* Si no caben */
+}
+
+.controls button, .zoom-pan-controls button { /* Estilo base para todos los botones de control */
+    padding: 10px 20px;
+    font-size: 1em;
     font-weight: 500;
-    background-color: var(--accent-color);
     color: white;
     border: none;
     border-radius: 5px;
@@ -198,15 +243,28 @@ canvas {
     transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.2s ease;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-
-.controls button.start-animation-btn:hover {
-    background-color: #d35400;
+.controls button.start-animation-btn,
+.controls button.pause-animation-btn,
+.controls button.reset-animation-btn,
+.static-container button.show-step-btn {
+    background-color: var(--accent-color);
+}
+.controls button:hover, .zoom-pan-controls button:hover {
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
-.controls button.start-animation-btn:active {
+.controls button:active, .zoom-pan-controls button:active {
     transform: scale(0.97);
     box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
+
+.controls button.pause-animation-btn {
+    background-color: var(--warning-color);
+    color: var(--secondary-color);
+}
+.controls button.start-animation-btn:hover { background-color: #d35400; }
+.controls button.pause-animation-btn:hover { background-color: #dab10d; }
+.controls button.reset-animation-btn { background-color: var(--light-text); }
+.controls button.reset-animation-btn:hover { background-color: #636e72; }
 
 
 .slider-container {
@@ -217,7 +275,7 @@ canvas {
     color: var(--text-color);
     font-size: 0.98em;
     width: 100%;
-    max-width: 450px; /* Limitar ancho */
+    max-width: 480px; /* Aumentado para FPS */
     flex-wrap: wrap;
 }
 .slider-container label {
@@ -227,30 +285,49 @@ canvas {
 .slider-container input[type="range"] {
     cursor: pointer;
     flex-grow: 1;
-    min-width: 150px; /* Ancho mínimo slider */
-    height: 6px; /* Hacer slider un poco más grueso */
-    accent-color: var(--primary-color); /* Color del slider */
+    min-width: 150px;
+    height: 7px; /* Más grueso */
+    accent-color: var(--primary-color);
 }
 
 .slider-container span {
     font-weight: bold;
     color: var(--secondary-color);
-    min-width: 50px; /* Espacio para el número */
+    min-width: 55px; /* Espacio para números y "FPS" */
     text-align: right;
     background-color: #e9ecef;
-    padding: 3px 8px;
+    padding: 4px 8px;
     border-radius: 4px;
     font-size: 0.92em;
-    font-family: 'Courier New', Courier, monospace; /* Fuente monoespaciada */
+    font-family: 'Consolas', 'Menlo', 'Monaco', monospace; /* Monoespaciada */
 }
 
-.infoText {
+.infoText, .staticInfoText {
     font-size: 0.9em;
     color: var(--light-text);
-    margin-top: 5px;
+    margin-top: 8px;
     font-style: italic;
-    min-height: 1.2em; /* Reservar espacio para evitar saltos */
+    min-height: 1.3em; /* Reservar espacio */
+    width: 100%;
+    max-width: 500px; /* Centrar texto */
+    text-align: center;
 }
+
+/* Controles de Zoom/Pan para estático */
+.zoom-pan-controls {
+    margin-top: 20px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}
+.zoom-pan-controls button {
+    background-color: var(--primary-color);
+    padding: 8px 12px; /* Más pequeños */
+    font-size: 0.9em;
+}
+.zoom-pan-controls button:hover { background-color: #2980b9; }
+
 
 /* --- General Elements --- */
 strong {
@@ -259,23 +336,32 @@ strong {
 }
 
 code {
-    background-color: #e8e8e8;
-    padding: 2px 6px;
+    background-color: #e8f4fd; /* Fondo azul claro para código */
+    padding: 3px 7px;
     border-radius: 4px;
-    font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-    font-size: 0.92em;
-    color: #333;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+    font-size: 0.93em;
+    color: #0366d6; /* Texto azul oscuro */
+    border: 1px solid #cde4f7;
+}
+pre code { /* Bloques de código */
+    display: block;
+    padding: 15px;
+    overflow-x: auto;
+    background-color: #f6f8fa;
+    border: 1px solid #dfe2e5;
+    color: #24292e;
 }
 
+
 ul, ol {
-    padding-left: 30px; /* Más indentación */
+    padding-left: 30px;
     margin-bottom: 18px;
 }
 li {
     margin-bottom: 10px;
 }
 
-/* Para las imágenes placeholder en Capítulo 4 */
 ul img {
     margin-right: 8px;
     width: 15px;
@@ -297,31 +383,25 @@ footer {
 /* --- MathJax Styling (Ajustes finos) --- */
 .MathJax {
     outline: 0;
-    font-size: 1.05em !important; /* Ligeramente más grande para legibilidad */
+    font-size: 1.08em !important; /* Más grande */
 }
 mjx-container {
     display: inline-block !important;
-    margin: 1px 0 !important; /* Ajuste vertical mínimo */
+    margin: 1px 0 !important;
     padding: 0 !important;
     text-align: left !important;
-    line-height: normal !important; /* Evitar line-height del body */
+    line-height: normal !important;
 }
-/* Ecuaciones en display mode (bloque) */
 mjx-container[display="true"] {
     display: block !important;
-    margin: 1.5em 0 !important; /* Más espacio vertical para ecuaciones en bloque */
-    text-align: center !important; /* Centrar ecuaciones en bloque */
+    margin: 1.8em 0 !important; /* Más espacio vertical */
+    text-align: center !important;
 }
 
 
 /* --- Responsive Design --- */
-
-/* Tablet y Móviles Grandes (Layout cambia) */
 @media (max-width: 1024px) {
-    body {
-        flex-direction: column; /* Apilar sidebar y contenido */
-    }
-
+    body { flex-direction: column; }
     .sidebar {
         width: 100%;
         height: auto;
@@ -330,64 +410,39 @@ mjx-container[display="true"] {
         border-bottom: 4px solid var(--primary-color);
         box-shadow: 0 3px 6px rgba(0,0,0,0.1);
         z-index: auto;
-        padding: 10px 0; /* Menos padding vertical */
+        padding: 10px 0;
     }
     .sidebar h3 { display: none; }
-    .sidebar ul {
-        display: flex;
-        flex-wrap: wrap; /* Permitir que los enlaces se envuelvan */
-        justify-content: center;
-        padding: 0 10px;
-    }
-    .sidebar ul li a {
-        font-size: 0.9em;
-        padding: 8px 12px;
-        margin: 3px;
-        border-left: none; /* Quitar borde izquierdo */
-        text-align: center;
-    }
-     .sidebar ul li a:hover, .sidebar ul li a:focus {
-        transform: none; /* Quitar transform */
-        background-color: var(--primary-color); /* Fondo sólido en hover */
-    }
+    .sidebar ul { display: flex; flex-wrap: wrap; justify-content: center; padding: 0 10px; }
+    .sidebar ul li a { font-size: 0.9em; padding: 8px 12px; margin: 3px; border-left: none; text-align: center; }
+    .sidebar ul li a:hover, .sidebar ul li a:focus { transform: none; background-color: var(--primary-color); }
 
-    .main-content {
-        margin-left: 0;
-        width: 100%;
-        max-width: none; /* Ocupar todo el ancho disponible */
-        padding: 25px 20px; /* Reducir padding */
-    }
-
-    header h1 { font-size: 2em; }
+    .main-content { margin-left: 0; width: 100%; max-width: none; padding: 25px 20px; }
+    header h1 { font-size: 2.1em; }
     .subtitle { font-size: 1.1em; }
-    .chapter h2 { font-size: 1.6em; }
+    .chapter h2 { font-size: 1.7em; }
     .chapter { padding: 25px; }
 }
 
-/* Móviles Medianos y Pequeños */
 @media (max-width: 768px) {
-     header h1 { font-size: 1.8em; }
+     header h1 { font-size: 1.9em; }
      .subtitle { font-size: 1.05em; }
-     .chapter h2 { font-size: 1.5em; }
+     .chapter h2 { font-size: 1.6em; }
      .chapter { padding: 20px; }
      .main-content { padding: 20px 15px; }
-
-    .slider-container {
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-    }
-     .slider-container input[type="range"] { width: 80%; }
-     .slider-container label { text-align: center; }
+    .slider-container { flex-direction: column; align-items: center; gap: 10px; }
+    .slider-container input[type="range"] { width: 80%; }
+    .slider-container label { text-align: center; }
+    .zoom-pan-controls { flex-wrap: wrap; } /* Permitir que se envuelvan */
 }
 
-/* Móviles muy pequeños */
 @media (max-width: 480px) {
-     body { font-size: 15px; } /* Reducir tamaño base */
-     header h1 { font-size: 1.6em; }
-     .chapter h2 { font-size: 1.4em; }
-     .controls button.start-animation-btn { font-size: 1em; padding: 10px 20px;}
+     body { font-size: 15.5px; }
+     header h1 { font-size: 1.7em; }
+     .chapter h2 { font-size: 1.45em; }
+     .controls button, .zoom-pan-controls button { font-size: 0.95em; padding: 9px 18px; }
      .main-content { padding: 15px 10px; }
      .chapter { padding: 15px; }
      .sidebar ul li a { font-size: 0.85em; padding: 6px 8px;}
+     .tab-button { font-size: 1em; padding: 8px 10px;}
 }

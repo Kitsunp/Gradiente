@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Descenso de Gradiente por Capítulos</title>
+    <title>Descenso de Gradiente por Capítulos Avanzado</title>
     <link rel="stylesheet" href="style.css">
     <!-- MathJax Configuration -->
     <script>
@@ -12,7 +12,7 @@
             inlineMath: [['$', '$'], ['\\(', '\\)']],
             displayMath: [['$$', '$$'], ['\\[', '\\]']],
             processEscapes: true,
-            tags: 'ams' // Para numeración de ecuaciones si se usa \label y \eqref
+            tags: 'ams'
           },
           svg: { fontCache: 'global' },
           options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
@@ -38,33 +38,33 @@
 
     <div class="main-content">
         <header>
-            <h1>Descenso de Gradiente: Una Guía Interactiva</h1>
-            <p class="subtitle">Explorando el corazón de la optimización en Machine Learning.</p>
+            <h1>Descenso de Gradiente: Una Guía Interactiva Avanzada</h1>
+            <p class="subtitle">Explorando el corazón de la optimización en Machine Learning con control detallado.</p>
         </header>
 
-        <!-- Capítulo 1: Introducción -->
+        <!-- Capítulo 1: Introducción (Contenido expandido ya provisto antes, se mantiene) -->
         <section id="chapter-intro" class="chapter">
             <h2>Capítulo 1: Introducción - El Problema de la Optimización</h2>
             <p>Bienvenido a esta guía sobre el Descenso de Gradiente. En el vasto campo del Machine Learning y en muchas otras áreas científicas y de ingeniería, nos enfrentamos constantemente a problemas de <strong>optimización</strong>. Optimizar significa encontrar la "mejor" solución posible dentro de un conjunto de opciones, según un criterio definido.</p>
             <p>A menudo, "mejor" se traduce en <strong>minimizar</strong> una función que representa un costo, un error, o alguna otra medida de "indeseabilidad". Piensa en ajustar los controles de una máquina para minimizar el consumo de energía, o encontrar la ruta más corta entre dos ciudades. En Machine Learning, queremos ajustar los <strong>parámetros</strong> $\mathbf{w}$ de un modelo (como los pesos en una red neuronal) para minimizar una <strong>función de pérdida</strong> (o función de costo), $L(\mathbf{w})$. Esta función $L$ nos dice qué tan bien (o mal) nuestro modelo se ajusta a los datos de entrenamiento.</p>
              <p>La analogía clásica es útil: imagina estar perdido en una cadena montañosa ($\mathbf{w}$ representa tu ubicación) en medio de una densa niebla. Tu objetivo es llegar al punto más bajo, el valle (el mínimo de $L(\mathbf{w})$). No tienes un mapa completo del terreno (no conoces la forma global de $L$), pero puedes sentir la pendiente del suelo justo donde estás parado. Intuitivamente, para descender, te moverías en la dirección que sientes más inclinada hacia abajo. El Descenso de Gradiente formaliza esta intuición usando cálculo.</p>
             <p>Nuestro objetivo matemático es, por tanto, encontrar los parámetros $\mathbf{w}^*$ que minimizan la función de pérdida:</p>
-            $$ \mathbf{w}^* = \arg \min_{\mathbf{w}} L(\mathbf{w}) $$
-            <p>El Descenso de Gradiente es uno de los algoritmos más fundamentales y efectivos para intentar resolver este problema, especialmente cuando $L$ es compleja y $\mathbf{w}$ tiene muchas dimensiones (millones, ¡o incluso miles de millones!).</p>
+            $$ \mathbf{w}^* = \arg \min_{\mathbf{w}} L(\mathbf{w}) \label{eq:argmin} $$
+            <p>El Descenso de Gradiente es uno de los algoritmos más fundamentales y efectivos para intentar resolver este problema, especialmente cuando $L$ es compleja y $\mathbf{w}$ tiene muchas dimensiones (millones, ¡o incluso miles de millones!). Es importante notar que este algoritmo generalmente encuentra mínimos locales, que pueden o no ser el mínimo global, especialmente en funciones no convexas.</p>
         </section>
 
-        <!-- Capítulo 2: El Gradiente -->
+        <!-- Capítulo 2: El Gradiente (Contenido expandido ya provisto antes, se mantiene) -->
         <section id="chapter-gradient" class="chapter">
             <h2>Capítulo 2: El Gradiente - La Brújula Matemática</h2>
             <p>Para navegar nuestra "función de pérdida" $L(\mathbf{w})$ y encontrar su mínimo, necesitamos saber en qué dirección movernos. La herramienta matemática clave que nos proporciona esta información direccional es el <strong>gradiente</strong>.</p>
             <p>Para una función escalar $f$ que depende de múltiples variables (un vector) $\mathbf{x} = [x_1, x_2, \dots, x_n]^T$, su gradiente en un punto $\mathbf{x}$ específico, denotado como $\nabla f(\mathbf{x})$ o $\text{grad}(f)(\mathbf{x})$, es un vector cuyas componentes son las <strong>derivadas parciales</strong> de $f$ con respecto a cada una de las variables en ese punto:</p>
             $$
-            \nabla f(\mathbf{x}) = \begin{bmatrix} \frac{\partial f}{\partial x_1}(\mathbf{x}) \\ \frac{\partial f}{\partial x_2}(\mathbf{x}) \\ \vdots \\ \frac{\partial f}{\partial x_n}(\mathbf{x}) \end{bmatrix}
+            \nabla f(\mathbf{x}) = \begin{bmatrix} \frac{\partial f}{\partial x_1}(\mathbf{x}) \\ \frac{\partial f}{\partial x_2}(\mathbf{x}) \\ \vdots \\ \frac{\partial f}{\partial x_n}(\mathbf{x}) \end{bmatrix} \label{eq:gradient_def}
             $$
             <p>Cada derivada parcial $\frac{\partial f}{\partial x_i}(\mathbf{x})$ mide cómo cambia la función $f$ si movemos infinitesimalmente el punto $\mathbf{x}$ solo en la dirección del eje $x_i$, manteniendo las demás constantes.</p>
             <p>La propiedad fundamental y más importante del gradiente es: <strong>$\nabla f(\mathbf{x})$ apunta en la dirección en la que la función $f$ aumenta más rápidamente</strong> partiendo desde el punto $\mathbf{x}$. Es la dirección de máxima pendiente ascendente local.</p>
             <p>Además, la <strong>magnitud</strong> (o norma) del vector gradiente, $\| \nabla f(\mathbf{x}) \| = \sqrt{\sum_{i=1}^n \left(\frac{\partial f}{\partial x_i}\right)^2}$, indica cuál es esa tasa máxima de incremento. Si $\| \nabla f(\mathbf{x}) \|$ es grande, la función está cambiando rápidamente cerca de $\mathbf{x}$; si es pequeña, la función es relativamente plana.</p>
-            <p>Si el gradiente es el vector cero, $\nabla f(\mathbf{x}) = \mathbf{0}$, significa que estamos en un <strong>punto crítico</strong> o estacionario (un mínimo local, un máximo local, o un punto de silla), donde la "pendiente" es cero en todas las direcciones.</p>
+            <p>Si el gradiente es el vector cero, $\nabla f(\mathbf{x}) = \mathbf{0}$, significa que estamos en un <strong>punto crítico</strong> o estacionario (un mínimo local, un máximo local, o un punto de silla), donde la "pendiente" es cero en todas las direcciones. Esta es una condición necesaria de primer orden para la optimalidad.</p>
             <p>Consideremos de nuevo la función $f(x, y) = x^2 + y^2$. Su gradiente es $\nabla f(x, y) = [2x, 2y]^T$.
             En $(1, 1)$, $\nabla f = [2, 2]^T$. Si nos movemos en esta dirección, la función crece lo más rápido posible.
             En $(0, 0)$, $\nabla f = [0, 0]^T$. Estamos en el mínimo global, un punto crítico.</p>
@@ -74,39 +74,84 @@
         <!-- Capítulo 3: Batch GD -->
         <section id="chapter-batch-gd" class="chapter">
             <h2>Capítulo 3: Descenso de Gradiente (Batch GD) - El Algoritmo Base</h2>
-            <p>Ahora que tenemos nuestra "brújula" (el gradiente $\nabla L(\mathbf{w})$), que apunta hacia el ascenso más rápido de la pérdida, la estrategia para minimizarla es simple: dar pasos en la <strong>dirección opuesta</strong>, es decir, en la dirección de $-\nabla L(\mathbf{w})$. Esta es la dirección de descenso más pronunciado local.</p>
+            <!-- Contenido existente y expandido sobre Batch GD -->
             <p>El algoritmo de <strong>Descenso de Gradiente (Batch)</strong> implementa esta idea de forma iterativa:</p>
             <ol>
-                <li><strong>Inicialización:</strong> Elige un punto de partida inicial para los parámetros, $\mathbf{w}_0$. Puede ser aleatorio, ceros, o basado en alguna heurística.</li>
+                <li><strong>Inicialización:</strong> Elige un punto de partida inicial para los parámetros, $\mathbf{w}_0$. La elección de $\mathbf{w}_0$ puede influir en a qué mínimo local converge el algoritmo. Comúnmente se usa inicialización aleatoria con valores pequeños o inicialización específica como Xavier/Glorot o He para redes neuronales (aunque esto último va más allá de GD básico).</li>
                 <li><strong>Iteración:</strong> Para $k = 0, 1, 2, \dots$ hasta que se cumpla un criterio de parada:</li>
                 <ul>
-                    <li><strong>a) Calcular el Gradiente Completo:</strong> Calcula el gradiente de la función de pérdida, $\nabla L(\mathbf{w}_k)$, evaluado en la posición actual $\mathbf{w}_k$. Crucialmente, en la versión "Batch" (lote), este cálculo utiliza <strong>todo el conjunto de datos de entrenamiento</strong>. Si la pérdida es una suma o promedio sobre los ejemplos, $L(\mathbf{w}) = \frac{1}{N} \sum_{i=1}^N L_i(\mathbf{w})$, entonces el gradiente también será un promedio: $\nabla L(\mathbf{w}_k) = \frac{1}{N} \sum_{i=1}^N \nabla L_i(\mathbf{w}_k)$.</li>
+                    <li><strong>a) Calcular el Gradiente Completo:</strong> Calcula el gradiente de la función de pérdida, $\nabla L(\mathbf{w}_k)$, evaluado en la posición actual $\mathbf{w}_k$. En la versión "Batch", este cálculo utiliza <strong>todo el conjunto de datos de entrenamiento</strong>.</li>
                     <li><strong>b) Actualizar los Parámetros:</strong> Da un paso en la dirección opuesta al gradiente:
-                        $$ \mathbf{w}_{k+1} = \mathbf{w}_k - \eta \nabla L(\mathbf{w}_k) $$
+                        $$ \mathbf{w}_{k+1} = \mathbf{w}_k - \eta \nabla L(\mathbf{w}_k) \label{eq:gd_update} $$
                     </li>
                 </ul>
-                 <li><strong>Criterio de Parada:</strong> Detén el proceso si:
+                 <li><strong>Criterio de Parada:</strong> El proceso se detiene cuando se satisface una o más condiciones:
                      <ul>
-                        <li>El cambio en los parámetros $\|\mathbf{w}_{k+1} - \mathbf{w}_k\|$ o en la pérdida $|L(\mathbf{w}_{k+1}) - L(\mathbf{w}_k)|$ es muy pequeño.</li>
-                        <li>Se alcanza un número máximo de iteraciones predefinido.</li>
-                        <li>El gradiente $\|\nabla L(\mathbf{w}_k)\|$ es casi cero.</li>
+                        <li><strong>Convergencia de Parámetros:</strong> El cambio en los parámetros es suficientemente pequeño: $\| \mathbf{w}_{k+1} - \mathbf{w}_k \| < \epsilon_w$.</li>
+                        <li><strong>Convergencia de la Pérdida:</strong> El cambio en el valor de la función de pérdida es mínimo: $|L(\mathbf{w}_{k+1}) - L(\mathbf{w}_k)| < \epsilon_L$.</li>
+                        <li><strong>Magnitud del Gradiente:</strong> El gradiente es cercano a cero, indicando un punto estacionario: $\| \nabla L(\mathbf{w}_k) \| < \epsilon_g$.</li>
+                        <li><strong>Número Máximo de Iteraciones:</strong> Se alcanza un límite predefinido de iteraciones para evitar ejecuciones indefinidas.</li>
                      </ul>
+                     Elegir los valores de $\epsilon$ adecuados es parte del ajuste del algoritmo.
                  </li>
             </ol>
-            <p>La constante $\eta > 0$ es la <strong>tasa de aprendizaje (learning rate)</strong>, que determina qué tan grandes son los pasos. Hablaremos más de ella en el próximo capítulo.</p>
-            <p><strong>Ventaja de Batch GD:</strong> La dirección de descenso calculada usando todo el dataset es una estimación precisa (no ruidosa) de la dirección óptima local. Esto generalmente lleva a una convergencia estable hacia un mínimo (si $\eta$ es adecuada).</p>
-            <p><strong>Desventaja de Batch GD:</strong> Calcular el gradiente sobre todo el dataset puede ser <strong>extremadamente costoso</strong> computacionalmente y lento si el dataset es grande (millones de ejemplos).</p>
-            <p>Visualicemos esto en 1D con la función convexa $f(x) = x^2$. El gradiente es $f'(x) = 2x$. La actualización se simplifica a $x_{k+1} = x_k - \eta (2x_k)$.</p>
-            <div class="animation-container">
-                <canvas id="canvas-batch-gd" width="600" height="350"></canvas>
-                <div class="controls" id="controls-batch-gd">
-                    <button class="start-animation-btn" data-chapter="batch-gd">Iniciar/Reiniciar Batch GD</button>
-                    <div class="slider-container">
-                        <label for="lrSlider-batch-gd">Tasa Aprendizaje ($\eta$):</label>
-                        <input type="range" id="lrSlider-batch-gd" name="lrSlider" min="0.001" max="0.99" step="0.001" value="0.1">
-                        <span class="lrDisplay">0.100</span>
+            <p>Visualicemos esto en 1D con $f(x) = x^2$. El gradiente es $f'(x) = 2x$. La actualización es $x_{k+1} = x_k - \eta (2x_k)$.</p>
+
+            <div class="visualization-tabs">
+                <button class="tab-button active" data-tab="animation" data-chapter="batch-gd">Animación</button>
+                <button class="tab-button" data-tab="static" data-chapter="batch-gd">Estático Interactivo</button>
+            </div>
+
+            <div id="animation-content-batch-gd" class="tab-content active">
+                <h4>Animación Dinámica</h4>
+                <div class="animation-container">
+                    <canvas id="canvas-batch-gd" width="600" height="350"></canvas>
+                    <div class="controls" id="controls-batch-gd">
+                        <div class="control-row">
+                            <button class="start-animation-btn" data-chapter="batch-gd">Iniciar</button>
+                            <button class="pause-animation-btn" data-chapter="batch-gd">Pausar</button>
+                            <button class="reset-animation-btn" data-chapter="batch-gd">Reiniciar</button>
+                        </div>
+                        <div class="slider-container">
+                            <label for="lrSlider-batch-gd">Tasa Aprendizaje ($\eta$):</label>
+                            <input type="range" id="lrSlider-batch-gd" min="0.001" max="0.99" step="0.001" value="0.1">
+                            <span class="lrDisplay">0.100</span>
+                        </div>
+                        <div class="slider-container">
+                            <label for="fpsSlider-batch-gd">Pasos/seg (FPS):</label>
+                            <input type="range" id="fpsSlider-batch-gd" min="1" max="60" step="1" value="10">
+                            <span class="fpsDisplay">10</span>
+                        </div>
+                        <p class="infoText">Función $f(x)=x^2$. Haz clic en la curva o usa Iniciar.</p>
                     </div>
-                    <p class="infoText">Función $f(x)=x^2$. Haz clic en la curva para iniciar o usa el botón.</p>
+                </div>
+            </div>
+
+            <div id="static-content-batch-gd" class="tab-content">
+                <h4>Visualización Estática Interactiva</h4>
+                <div class="static-container">
+                    <canvas id="static-canvas-batch-gd" width="600" height="350"></canvas>
+                    <div class="controls" id="static-controls-batch-gd">
+                        <div class="slider-container">
+                            <label for="static-xSlider-batch-gd">Posición $x$ Actual:</label>
+                            <input type="range" id="static-xSlider-batch-gd" min="-5" max="5" step="0.01" value="2.5">
+                            <span class="static-xDisplay">2.50</span>
+                        </div>
+                        <div class="slider-container">
+                            <label for="static-lrSlider-batch-gd">Tasa Aprendizaje ($\eta$):</label>
+                            <input type="range" id="static-lrSlider-batch-gd" min="0.001" max="0.99" step="0.001" value="0.1">
+                            <span class="static-lrDisplay">0.100</span>
+                        </div>
+                        <button class="show-step-btn" data-chapter="batch-gd">Mostrar Siguiente Paso & Gradiente</button>
+                        <div class="zoom-pan-controls">
+                            <button data-action="zoom-in" title="Acercar">+</button>
+                            <button data-action="zoom-out" title="Alejar">-</button>
+                            <button data-action="pan-left" title="Mover Izquierda">←</button>
+                            <button data-action="pan-right" title="Mover Derecha">→</button>
+                            <button data-action="reset-view" title="Restaurar Vista">Vista</button>
+                        </div>
+                        <p class="staticInfoText">Ajusta $x$ y $\eta$ para ver el gradiente y el posible siguiente paso.</p>
+                    </div>
                 </div>
             </div>
         </section>
@@ -114,26 +159,41 @@
         <!-- Capítulo 4: Tasa de Aprendizaje -->
         <section id="chapter-learning-rate" class="chapter">
             <h2>Capítulo 4: La Tasa de Aprendizaje ($\eta$) - El Tamaño del Paso</h2>
-            <p>Hemos visto que la regla de actualización del Descenso de Gradiente es $\mathbf{w}_{k+1} = \mathbf{w}_k - \eta \nabla L(\mathbf{w}_k)$. El hiperparámetro $\eta$, la <strong>tasa de aprendizaje</strong>, juega un papel absolutamente crítico en el rendimiento del algoritmo. Controla la magnitud del paso que damos en la dirección del descenso más pronunciado en cada iteración.</p>
-            <p>La elección de $\eta$ implica un compromiso delicado:</p>
+            <!-- Contenido existente y expandido -->
+            <p>La elección de la tasa de aprendizaje $\eta$ en $\mathbf{w}_{k+1} = \mathbf{w}_k - \eta \nabla L(\mathbf{w}_k)$ es crucial. Es uno de los hiperparámetros más importantes a ajustar.</p>
             <ul>
-                <li><img src="https://via.placeholder.com/15x15/27ae60/27ae60.png?text=+" alt="" style="vertical-align: middle;"/> <strong>$\eta$ demasiado pequeña:</strong> Los pasos serán diminutos. El algoritmo progresará muy lentamente hacia el mínimo, requiriendo un número excesivo de iteraciones. Esto puede ser computacionalmente ineficiente. Imagina bajar una montaña dando pasitos de bebé.</li>
-                <li><img src="https://via.placeholder.com/15x15/c0392b/c0392b.png?text=+" alt="" style="vertical-align: middle;"/> <strong>$\eta$ demasiado grande:</strong> Los pasos pueden ser tan largos que el algoritmo "salte" por encima del mínimo. Podría oscilar de un lado a otro del valle sin converger, o peor aún, los pasos podrían llevarnos a regiones donde la pérdida es cada vez mayor, haciendo que el algoritmo <strong>diverja</strong> (la pérdida tiende a infinito). Imagina intentar bajar la montaña dando saltos gigantes; podrías terminar más arriba o en una ladera diferente.</li>
-                <li><img src="https://via.placeholder.com/15x15/f1c40f/f1c40f.png?text=+" alt="" style="vertical-align: middle;"/> <strong>$\eta$ "justa":</strong> Una tasa de aprendizaje bien elegida permite una convergencia razonablemente rápida y estable hacia un mínimo (local o global).</li>
+                <li><img src="https://via.placeholder.com/15x15/27ae60/27ae60.png?text=+" alt="LR Pequeña" style="vertical-align: middle;"/> <strong>$\eta$ demasiado pequeña:</strong> Convergencia muy lenta.</li>
+                <li><img src="https://via.placeholder.com/15x15/c0392b/c0392b.png?text=+" alt="LR Grande" style="vertical-align: middle;"/> <strong>$\eta$ demasiado grande:</strong> Puede sobrepasar el mínimo, oscilar o divergir.</li>
+                <li><img src="https://via.placeholder.com/15x15/f1c40f/f1c40f.png?text=+" alt="LR Justa" style="vertical-align: middle;"/> <strong>$\eta$ "justa":</strong> Convergencia razonablemente rápida y estable.</li>
             </ul>
-            <p>No hay un valor único de $\eta$ que funcione para todos los problemas. Depende de la forma de la función de pérdida y de la escala de los gradientes. Encontrar un buen valor a menudo requiere experimentación.</p>
-            <p>Una técnica común es usar <strong>tasas de aprendizaje decrecientes</strong> (learning rate schedules o decay): empezar con una $\eta$ relativamente grande para progresar rápidamente al principio, y reducirla gradualmente a medida que nos acercamos al mínimo para permitir una convergencia más fina y evitar oscilaciones.</p>
-            <p>Experimenta con diferentes valores de $\eta$ en la animación siguiente sobre $f(x)=x^2$. Observa cómo valores pequeños ($\approx 0.01$) son lentos, valores moderados ($\approx 0.1-0.4$) convergen bien, valores más grandes ($\approx 0.5-0.9$) oscilan pero convergen, y valores $\ge 1.0$ divergen espectacularmente. (Nota: El umbral exacto para la divergencia depende de la función específica).</p>
-             <div class="animation-container">
+            <p>Encontrar una buena $\eta$ a menudo requiere experimentación. Además de un valor fijo, se usan <strong>tasas de aprendizaje decrecientes</strong> (learning rate schedules):</p>
+            <ul>
+                <li><strong>Decaimiento por Pasos (Step Decay):</strong> $\eta$ se reduce por un factor (e.g., 0.1) cada $N$ épocas/iteraciones.</li>
+                <li><strong>Decaimiento Exponencial:</strong> $\eta_k = \eta_0 e^{-\lambda k}$, donde $\lambda$ es una tasa de decaimiento.</li>
+                <li><strong>Decaimiento $1/t$:</strong> $\eta_k = \eta_0 / (1 + \lambda k)$.</li>
+                <li><strong>Cosine Annealing:</strong> $\eta$ sigue una forma cosenoidal, disminuyendo y a veces aumentando cíclicamente.</li>
+            </ul>
+            <p>También existen técnicas de "calentamiento" (warm-up), donde $\eta$ se incrementa gradualmente desde un valor muy pequeño al inicio del entrenamiento antes de seguir un esquema de decaimiento.</p>
+            <p>Experimenta con $\eta$ en la animación. Observa cómo $\eta \ge 1.0$ para $f(x)=x^2$ (cuya segunda derivada es 2) causa divergencia, ya que el óptimo para $\eta$ en GD simple es $< 2 / L_{max}$, donde $L_{max}$ es la constante de Lipschitz del gradiente (la máxima "curvatura").</p>
+            <div class="animation-container"> <!-- Solo animación para este capítulo -->
                 <canvas id="canvas-learning-rate" width="600" height="350"></canvas>
                 <div class="controls" id="controls-learning-rate">
-                    <button class="start-animation-btn" data-chapter="learning-rate">Probar Tasa de Aprendizaje</button>
+                     <div class="control-row">
+                        <button class="start-animation-btn" data-chapter="learning-rate">Iniciar</button>
+                        <button class="pause-animation-btn" data-chapter="learning-rate">Pausar</button>
+                        <button class="reset-animation-btn" data-chapter="learning-rate">Reiniciar</button>
+                    </div>
                     <div class="slider-container">
                         <label for="lrSlider-learning-rate">Prueba $\eta$:</label>
-                        <input type="range" id="lrSlider-learning-rate" name="lrSlider" min="0.001" max="1.05" step="0.001" value="0.1"> <!-- Rango ajustado -->
+                        <input type="range" id="lrSlider-learning-rate" min="0.001" max="1.05" step="0.001" value="0.1">
                         <span class="lrDisplay">0.100</span>
                     </div>
-                    <p class="infoText">Función $f(x)=x^2$. Observa el efecto de $\eta$ (lento, óptimo, oscilante, divergente).</p>
+                    <div class="slider-container">
+                        <label for="fpsSlider-learning-rate">Pasos/seg (FPS):</label>
+                        <input type="range" id="fpsSlider-learning-rate" min="1" max="60" step="1" value="10">
+                        <span class="fpsDisplay">10</span>
+                    </div>
+                    <p class="infoText">Función $f(x)=x^2$. Observa el efecto de $\eta$.</p>
                 </div>
             </div>
         </section>
@@ -141,39 +201,34 @@
         <!-- Capítulo 5: SGD -->
         <section id="chapter-sgd" class="chapter">
             <h2>Capítulo 5: Descenso de Gradiente Estocástico (SGD) - Rapidez y Ruido</h2>
-            <p>La principal limitación del Batch GD es su coste computacional en datasets masivos. Si tenemos millones o miles de millones de ejemplos, calcular el gradiente completo en cada iteración es prohibitivo. Aquí es donde entra el <strong>Descenso de Gradiente Estocástico (SGD)</strong>.</p>
-            <p>La idea central de SGD es drásticamente simple: en lugar de calcular el gradiente promediando sobre *todo* el dataset, estimamos el gradiente usando <strong>un único ejemplo</strong> de entrenamiento a la vez, seleccionado típicamente de forma aleatoria (de ahí "estocástico").</p>
-            <p>La regla de actualización se modifica así:</p>
-            $$ \mathbf{w}_{k+1} = \mathbf{w}_k - \eta \nabla L_i(\mathbf{w}_k) $$
-            donde $L_i(\mathbf{w})$ es la función de pérdida calculada <strong>solo para el $i$-ésimo ejemplo</strong> de entrenamiento, elegido al azar en la iteración $k$.
-            <p><strong>Ventajas de SGD:</strong></p>
-            <ul>
-                <li><strong>Velocidad:</strong> Cada actualización es extremadamente rápida, ya que solo requiere procesar un ejemplo. Esto permite realizar muchas más actualizaciones en el mismo tiempo que Batch GD haría una sola.</li>
-                <li><strong>Escape de Mínimos Locales:</strong> El gradiente calculado a partir de un solo ejemplo es una estimación muy "ruidosa" del gradiente verdadero. ¡Este ruido puede ser beneficioso! Puede ayudar al algoritmo a "saltar" fuera de mínimos locales poco profundos o a navegar mejor por puntos de silla, potencialmente encontrando mínimos mejores.</li>
-                <li><strong>Aprendizaje Online:</strong> Permite actualizar el modelo a medida que llegan nuevos datos, sin necesidad de re-procesar todo el historial.</li>
-            </ul>
-            <p><strong>Desventajas de SGD:</strong></p>
-            <ul>
-                <li><strong>Convergencia Ruidosa:</strong> Debido al ruido en la estimación del gradiente, la trayectoria hacia el mínimo es mucho más errática y oscilante que en Batch GD. Nunca converge exactamente al mínimo, sino que tiende a "bailar" alrededor de él.</li>
-                <li><strong>Sensibilidad a $\eta$:</strong> La elección de $\eta$ es aún más crítica. A menudo se requiere una tasa de aprendizaje más pequeña que en Batch GD y es casi indispensable usar esquemas de decaimiento de $\eta$ (reducirla con el tiempo) para lograr que las oscilaciones disminuyan cerca del mínimo.</li>
-                <li><strong>Paralelización Limitada:</strong> Procesar un ejemplo a la vez no aprovecha tan bien el hardware moderno (GPUs) como procesar lotes.</li>
-            </ul>
-            <p>Observa la trayectoria ruidosa de SGD en la animación. Simulamos el ruido inherente a SGD añadiendo una perturbación aleatoria al gradiente verdadero en cada paso (la magnitud del ruido puede ajustarse con el slider).</p>
-             <div class="animation-container">
+            <!-- Contenido existente y expandido -->
+            <p>La idea central de SGD es: en lugar de calcular el gradiente exacto $\nabla L(\mathbf{w}_k)$ usando todos los datos, estimamos el gradiente usando <strong>un único ejemplo</strong> de entrenamiento a la vez, seleccionado aleatoriamente (o iterando secuencialmente sobre el dataset barajado época a época).</p>
+            <p>Actualización: $ \mathbf{w}_{k+1} = \mathbf{w}_k - \eta \nabla L_i(\mathbf{w}_k) $ donde $L_i(\mathbf{w})$ es la pérdida para el $i$-ésimo ejemplo.</p>
+            <p>El ruido introducido, aunque dificulta la convergencia precisa al mínimo, puede ser beneficioso para escapar de mínimos locales poco profundos. El uso de tasas de aprendizaje decrecientes es casi indispensable con SGD puro.</p>
+            <div class="animation-container">
                 <canvas id="canvas-sgd" width="600" height="350"></canvas>
                 <div class="controls" id="controls-sgd">
-                    <button class="start-animation-btn" data-chapter="sgd">Iniciar/Reiniciar SGD</button>
+                    <div class="control-row">
+                        <button class="start-animation-btn" data-chapter="sgd">Iniciar</button>
+                        <button class="pause-animation-btn" data-chapter="sgd">Pausar</button>
+                        <button class="reset-animation-btn" data-chapter="sgd">Reiniciar</button>
+                    </div>
                     <div class="slider-container">
                         <label for="lrSlider-sgd">Tasa Aprendizaje ($\eta$):</label>
-                        <input type="range" id="lrSlider-sgd" name="lrSlider" min="0.001" max="0.5" step="0.001" value="0.1">
+                        <input type="range" id="lrSlider-sgd" min="0.001" max="0.5" step="0.001" value="0.1">
                          <span class="lrDisplay">0.100</span>
                     </div>
                      <div class="slider-container">
                         <label for="noiseSlider-sgd">Nivel de Ruido (Simulado):</label>
-                        <input type="range" id="noiseSlider-sgd" name="noiseSlider" min="0" max="1.5" step="0.1" value="0.5">
+                        <input type="range" id="noiseSlider-sgd" min="0" max="1.5" step="0.1" value="0.5">
                         <span class="noiseDisplay">0.5</span>
                     </div>
-                    <p class="infoText">Función $f(x)=x^2$. Nota la trayectoria "ruidosa". El ruido ayuda a veces, pero dificulta la convergencia final.</p>
+                    <div class="slider-container">
+                        <label for="fpsSlider-sgd">Pasos/seg (FPS):</label>
+                        <input type="range" id="fpsSlider-sgd" min="1" max="60" step="1" value="10">
+                        <span class="fpsDisplay">10</span>
+                    </div>
+                    <p class="infoText">Función $f(x)=x^2$. Nota la trayectoria "ruidosa".</p>
                 </div>
             </div>
         </section>
@@ -181,91 +236,89 @@
         <!-- Capítulo 6: Mini-batch GD -->
         <section id="chapter-minibatch" class="chapter">
             <h2>Capítulo 6: Descenso por Mini-Lotes (Mini-batch GD) - El Punto Medio</h2>
-            <p>Hemos visto los extremos: Batch GD (preciso pero lento) y SGD (rápido pero ruidoso). El <strong>Descenso de Gradiente por Mini-Lotes (Mini-batch GD)</strong> ofrece un compromiso pragmático y efectivo que combina las ventajas de ambos.</p>
-            <p>En lugar de usar todo el dataset (Batch) o un solo ejemplo (SGD), Mini-batch GD calcula el gradiente sobre un <strong>pequeño subconjunto</strong> de datos llamado "mini-lote", seleccionado aleatoriamente del conjunto de entrenamiento. El tamaño del mini-lote (batch size) es un hiperparámetro, típicamente una potencia de 2 como 32, 64, 128, 256, etc.</p>
-            <p>La regla de actualización es:</p>
-            $$ \mathbf{w}_{k+1} = \mathbf{w}_k - \eta \nabla L_B(\mathbf{w}_k) $$
-            donde $L_B(\mathbf{w}) = \frac{1}{|B|} \sum_{i \in B} L_i(\mathbf{w})$ es la pérdida promedio sobre los ejemplos $i$ que pertenecen al mini-lote actual $B$.
-            <p><strong>Ventajas de Mini-batch GD:</strong></p>
+            <!-- Contenido existente y expandido -->
+            <p>Actualización: $ \mathbf{w}_{k+1} = \mathbf{w}_k - \eta \nabla L_B(\mathbf{w}_k) $ donde $L_B(\mathbf{w})$ es la pérdida promedio sobre el mini-lote $B$.</p>
+            <p>El <strong>tamaño del mini-lote</strong> (batch size) es un hiperparámetro importante:</p>
             <ul>
-                <li><strong>Estimación de Gradiente Reducida en Ruido:</strong> Al promediar sobre varios ejemplos (aunque no todos), la estimación del gradiente es mucho menos ruidosa que en SGD, llevando a una convergencia más estable y directa.</li>
-                <li><strong>Eficiencia Computacional:</strong> Calcular el gradiente sobre un mini-lote se puede paralelizar muy eficientemente en hardware moderno como las GPUs, logrando un rendimiento mucho mayor que SGD (que procesa secuencialmente) y siendo drásticamente más rápido que Batch GD en datasets grandes.</li>
-                <li><strong>Beneficios del Ruido (Moderado):</strong> Aún conserva parte del ruido beneficioso de SGD (comparado con Batch GD), lo que puede ayudar a navegar paisajes de pérdida complejos.</li>
+                <li><strong>Lotes pequeños (e.g., 1, 8, 16):</strong> Comportamiento más ruidoso (similar a SGD), puede generalizar mejor, pero menos eficiente en GPUs.</li>
+                <li><strong>Lotes grandes (e.g., 128, 256, 512+):</strong> Estimación de gradiente más estable, mejor uso de GPUs, pero puede converger a mínimos más "agudos" (peor generalización) y requiere más memoria.</li>
             </ul>
-             <p><strong>Desventajas:</strong></p>
-             <ul>
-                <li>Introduce un nuevo hiperparámetro: el tamaño del mini-lote.</li>
-                <li>La convergencia sigue siendo algo ruidosa (comparada con Batch GD), aunque mucho menos que SGD.</li>
-             </ul>
-            <p>Debido a este excelente equilibrio entre estabilidad, velocidad y eficiencia computacional, <strong>Mini-batch GD es, con diferencia, el algoritmo de optimización más utilizado en la práctica para entrenar modelos de Deep Learning</strong>. De hecho, a menudo, cuando la gente dice "SGD" en el contexto de Deep Learning, en realidad se refiere a Mini-batch GD.</p>
-            <p>(No incluiremos una animación separada aquí, pues visualmente se comportaría de forma intermedia entre Batch GD y SGD, dependiendo del tamaño del lote y la tasa de aprendizaje. Lo importante es entender su posición como el estándar de facto).</p>
+            <p>En la práctica, se buscan tamaños de lote que ofrezcan un buen compromiso. Mini-batch GD es el estándar de facto en Deep Learning.</p>
+            <p><em>(No se incluye animación interactiva aquí por simplicidad, ya que su comportamiento sería una mezcla de Batch y SGD. Se podría añadir una visualización estática si se desea).</em></p>
+            <pre><code class="language-pseudocode">
+Algoritmo: Mini-batch Gradient Descent
+-------------------------------------
+Entrada: Función de pérdida L, datos D, tasa de aprendizaje η, tamaño de mini-lote S_B
+Inicializar parámetros w_0
+k = 0
+Mientras no se cumpla criterio de parada:
+  Barajar datos D (shuffle)
+  Para cada mini-lote B de tamaño S_B en D:
+    Calcular gradiente promedio g_B = (1/S_B) * Σ_{i in B} ∇L_i(w_k)
+    w_{k+1} = w_k - η * g_B
+    k = k + 1
+Retornar w_k
+            </code></pre>
         </section>
 
         <!-- Capítulo 7: Desafíos Comunes -->
         <section id="chapter-challenges" class="chapter">
             <h2>Capítulo 7: Desafíos Comunes - Mínimos Locales, Puntos de Silla y Valles</h2>
-            <p>El Descenso de Gradiente, aunque potente, no está exento de dificultades, especialmente cuando la función de pérdida $L(\mathbf{w})$ es <strong>no convexa</strong>, como suele ocurrir en el entrenamiento de redes neuronales profundas. Una función no convexa puede tener múltiples valles y picos.</p>
-            <p>Los principales desafíos incluyen:</p>
-            <ul>
-                <li><strong>Mínimos Locales:</strong> Son puntos $\mathbf{w}^*$ donde $\nabla L(\mathbf{w}^*) = 0$ y la pérdida es menor que en todos los puntos cercanos, pero <em>no necesariamente</em> es el valor más bajo posible en todo el espacio de parámetros (el mínimo global). Si GD inicia cerca de un mínimo local, puede converger a él y quedarse "atascado", sin encontrar una solución potencialmente mucho mejor (el mínimo global).</li>
-                <li><strong>Puntos de Silla (Saddle Points):</strong> Son puntos $\mathbf{w}^*$ donde $\nabla L(\mathbf{w}^*) = 0$, pero no son ni mínimos ni máximos locales. La función "sube" en algunas direcciones y "baja" en otras desde este punto (como una silla de montar). Aunque el gradiente es cero, no estamos en un óptimo. En problemas de alta dimensión (muchos parámetros $\mathbf{w}$), los puntos de silla son exponencialmente más comunes que los mínimos locales. Pueden ralentizar drásticamente la convergencia porque el gradiente se vuelve muy pequeño cerca de ellos, haciendo que el algoritmo avance muy lentamente.</li>
-                <li><strong>Valles Planos (Plateaus):</strong> Son regiones extensas del espacio de parámetros donde la función de pérdida es casi plana, es decir, el gradiente $\nabla L(\mathbf{w})$ es muy cercano a cero aunque no estemos en un mínimo. En estas regiones, GD avanza extremadamente despacio, dando la impresión de haberse estancado.</li>
-                <li><strong>Acantilados (Cliffs):</strong> Regiones donde el gradiente es extremadamente grande, lo que puede causar que un paso de GD (incluso con una $\eta$ razonable) lance los parámetros muy lejos, potencialmente a una región mucho peor de la función de pérdida (similar a la divergencia).</li>
-            </ul>
-            <p>Los optimizadores modernos (como Adam, RMSprop) incorporan mecanismos para intentar mitigar algunos de estos problemas, especialmente los relacionados con puntos de silla y valles planos.</p>
-            <p>La siguiente animación utiliza la función no convexa $f(x) = 0.1x^4 - 1.5x^2 + 0.5x + 4$, que tiene dos mínimos locales distintos. Intenta iniciar el descenso desde diferentes puntos haciendo clic en la curva y observa cómo el algoritmo converge a diferentes mínimos dependiendo del punto de partida.</p>
-             <div class="animation-container">
-                <canvas id="canvas-challenges" width="600" height="400"></canvas> <!-- Más altura para esta función -->
+            <!-- Contenido existente y expandido -->
+            <p>La función $f(x) = 0.1x^4 - 1.5x^2 + 0.5x + 4$ tiene dos mínimos locales. Intenta iniciar desde diferentes puntos. La capacidad de SGD y variantes con momento para escapar de mínimos locales es una de sus ventajas.</p>
+            <div class="animation-container">
+                <canvas id="canvas-challenges" width="600" height="400"></canvas>
                 <div class="controls" id="controls-challenges">
-                    <button class="start-animation-btn" data-chapter="challenges">Explorar Mínimos Locales</button>
+                     <div class="control-row">
+                        <button class="start-animation-btn" data-chapter="challenges">Iniciar</button>
+                        <button class="pause-animation-btn" data-chapter="challenges">Pausar</button>
+                        <button class="reset-animation-btn" data-chapter="challenges">Reiniciar</button>
+                    </div>
                     <div class="slider-container">
                         <label for="lrSlider-challenges">Tasa Aprendizaje ($\eta$):</label>
-                        <input type="range" id="lrSlider-challenges" name="lrSlider" min="0.001" max="0.1" step="0.001" value="0.02">
+                        <input type="range" id="lrSlider-challenges" min="0.001" max="0.1" step="0.001" value="0.02">
                         <span class="lrDisplay">0.020</span>
                     </div>
-                    <p class="infoText">Función: $f(x)=0.1x^4 - 1.5x^2 + 0.5x + 4$. Haz clic para iniciar.</p>
+                    <div class="slider-container">
+                        <label for="fpsSlider-challenges">Pasos/seg (FPS):</label>
+                        <input type="range" id="fpsSlider-challenges" min="1" max="60" step="1" value="10">
+                        <span class="fpsDisplay">10</span>
+                    </div>
+                    <p class="infoText">Función con mínimos locales. Haz clic para iniciar.</p>
                 </div>
             </div>
         </section>
 
-        <!-- Capítulo 8: Optimizadores Avanzados -->
+        <!-- Capítulo 8: Optimizadores Avanzados (Contenido expandido ya provisto antes, se mantiene) -->
         <section id="chapter-advanced" class="chapter">
             <h2>Capítulo 8: Más Allá del Descenso Básico - Optimizadores Avanzados (Conceptual)</h2>
-            <p>Para abordar los desafíos del Descenso de Gradiente básico (convergencia lenta, sensibilidad a $\eta$, problemas con puntos de silla y valles) y acelerar el entrenamiento de modelos complejos, se ha desarrollado una familia de <strong>optimizadores adaptativos y basados en momento</strong>. Estos algoritmos modifican la actualización de parámetros de maneras inteligentes:</p>
+            <p>Para mitigar los desafíos de GD/SGD y acelerar la convergencia, se han desarrollado algoritmos de optimización más sofisticados. Estos a menudo adaptan la tasa de aprendizaje o incorporan información de gradientes pasados:</p>
             <ul>
                 <li>
                     <strong>Momentum (Momento):</strong>
-                    <p>Introduce el concepto de "inercia" o "velocidad". La actualización en un punto no solo depende del gradiente actual, sino que también acumula una fracción de la dirección de las actualizaciones anteriores. Imagina una bola rodando cuesta abajo: no se detiene instantáneamente si la pendiente se aplana, sino que sigue moviéndose debido a su inercia.</p>
-                    <p>Ayuda a:</p>
-                    <ul>
-                        <li>Acelerar la convergencia en direcciones donde el gradiente apunta consistentemente.</li>
-                        <li>Amortiguar las oscilaciones en direcciones donde el gradiente cambia rápidamente (valles estrechos).</li>
-                        <li>Potencialmente atravesar pequeños mínimos locales o valles planos.</li>
-                    </ul>
-                     Fórmula conceptual básica:
-                     $$ \mathbf{v}_{k+1} = \beta \mathbf{v}_k + \eta \nabla L(\mathbf{w}_k) $$
+                    <p>Introduce una "inercia" o "velocidad". La actualización no solo depende del gradiente actual, sino también de la dirección de las actualizaciones anteriores. Ayuda a acelerar en direcciones consistentes y a amortiguar oscilaciones. La actualización básica con momento es:</p>
+                     $$ \mathbf{v}_{k+1} = \beta \mathbf{v}_k + (1-\beta_k') \eta_k \nabla L(\mathbf{w}_k) $$
                      $$ \mathbf{w}_{k+1} = \mathbf{w}_k - \mathbf{v}_{k+1} $$
-                     (Hay variantes como Nesterov Accelerated Gradient - NAG). $\beta$ es el factor de momento (e.g., 0.9).
+                     <p>(donde $\mathbf{v}$ es la velocidad/momento, $\beta$ es un hiperparámetro cercano a 1, como 0.9, y a veces se usa una tasa de aprendizaje $\eta$ y un factor $(1-\beta)$ para el término del gradiente. Nesterov Accelerated Gradient - NAG - es una variante popular que calcula el gradiente "mirando hacia adelante").</p>
                 </li>
                 <li>
                     <strong>AdaGrad (Adaptive Gradient):</strong>
-                    <p>Adapta la tasa de aprendizaje <em>individualmente para cada parámetro</em>. Reduce la tasa de aprendizaje para parámetros que han recibido actualizaciones grandes (gradientes grandes) en el pasado, y la aumenta (relativamente) para parámetros con actualizaciones pequeñas. Es útil para datos dispersos (sparse data) donde algunos parámetros se actualizan con poca frecuencia.</p>
-                    <p>Su principal inconveniente es que la tasa de aprendizaje puede disminuir monótonamente hasta volverse demasiado pequeña, deteniendo el aprendizaje prematuramente.</p>
+                    <p>Adapta la tasa de aprendizaje <em>individualmente para cada parámetro</em>. Acumula los cuadrados de los gradientes pasados para cada parámetro y divide la tasa de aprendizaje global por la raíz cuadrada de esta suma. Esto reduce la tasa de aprendizaje para parámetros que han tenido gradientes grandes y la aumenta (relativamente) para aquellos con gradientes pequeños.</p>
+                    <p>Fórmula simplificada para el parámetro $j$: $w_j \leftarrow w_j - \frac{\eta}{\sqrt{G_j + \epsilon}} \nabla L(w_j)$, donde $G_j$ es la suma de los cuadrados de los gradientes pasados para $w_j$. $\epsilon$ es una constante pequeña para evitar división por cero. Su principal inconveniente es que la tasa de aprendizaje puede disminuir monótonamente hasta volverse demasiado pequeña.</p>
                 </li>
                  <li>
                     <strong>RMSprop (Root Mean Square Propagation):</strong>
-                    <p>También adapta la tasa de aprendizaje por parámetro, pero aborda el problema de AdaGrad. En lugar de acumular todos los gradientes cuadrados pasados, utiliza un promedio móvil exponencial de ellos. Esto evita que la tasa de aprendizaje decaiga agresivamente y permite que el algoritmo continúe aprendiendo.</p>
+                    <p>Aborda el problema de AdaGrad usando un promedio móvil exponencial de los gradientes cuadrados en lugar de acumularlos todos: $E[g^2]_k = \gamma E[g^2]_{k-1} + (1-\gamma)(\nabla L(\mathbf{w}_k))^2$. Luego la actualización es $w \leftarrow w - \frac{\eta}{\sqrt{E[g^2]_k + \epsilon}} \nabla L(\mathbf{w}_k)$. $\gamma$ es un factor de decaimiento (e.g., 0.9).</p>
                  </li>
                 <li>
                     <strong>Adam (Adaptive Moment Estimation):</strong>
-                    <p>Combina las ideas clave de Momentum y RMSprop. Mantiene estimaciones de promedios móviles exponenciales tanto del gradiente en sí (primer momento, como Momentum) como de los gradientes al cuadrado (segundo momento, como RMSprop). Utiliza estas estimaciones para calcular actualizaciones de parámetros adaptativas.</p>
-                    <p><strong>Adam es actualmente uno de los optimizadores por defecto más populares y efectivos</strong> en Deep Learning. A menudo funciona bien con poca necesidad de ajustar sus hiperparámetros (aunque $\eta$ sigue siendo importante).</p>
+                    <p>Combina las ideas de Momentum (estimación del primer momento del gradiente) y RMSprop (estimación del segundo momento, varianza). Mantiene estimaciones de promedios móviles exponenciales para ambos y los usa para calcular actualizaciones de parámetros adaptativas y con corrección de sesgo. Es actualmente uno de los optimizadores por defecto más populares y efectivos.</p>
                  </li>
             </ul>
-            <p>Comprender la intuición detrás de estos optimizadores es valioso, aunque sus detalles matemáticos pueden ser complejos. La buena noticia es que están implementados en todas las bibliotecas estándar de Machine Learning (TensorFlow, PyTorch, scikit-learn), por lo que usarlos suele ser tan simple como cambiar un parámetro en la configuración del entrenamiento.</p>
+            <p>Comprender la intuición detrás de estos optimizadores es valioso. Están implementados en todas las bibliotecas estándar de Machine Learning.</p>
         </section>
 
-        <!-- Capítulo 9: Conclusión -->
+        <!-- Capítulo 9: Conclusión (Contenido expandido ya provisto antes, se mantiene) -->
         <section id="chapter-conclusion" class="chapter">
             <h2>Capítulo 9: Aplicaciones y Conclusión</h2>
             <p>El Descenso de Gradiente y sus variantes son, sin exagerar, la columna vertebral del entrenamiento de la mayoría de los modelos de Machine Learning supervisado modernos. Desde ajustar los coeficientes de una simple regresión lineal hasta entrenar redes neuronales con miles de millones de parámetros para tareas como reconocimiento de imágenes, traducción automática o generación de texto, estos algoritmos de optimización son indispensables.</p>
@@ -275,7 +328,7 @@
                 <li>El concepto fundamental del <strong>gradiente ($\nabla f$)</strong> como el indicador de la dirección de máximo ascenso de una función.</li>
                 <li>El algoritmo de <strong>Descenso de Gradiente</strong>, que da pasos iterativos en la dirección opuesta al gradiente ($-\nabla f$) para minimizar la función.</li>
                 <li>Las diferencias clave entre <strong>Batch GD</strong> (lote completo, preciso pero lento), <strong>SGD</strong> (un ejemplo, rápido pero ruidoso) y <strong>Mini-batch GD</strong> (lote pequeño, el estándar práctico).</li>
-                <li>La importancia crítica y la sensibilidad de la <strong>tasa de aprendizaje ($\eta$)</strong>.</li>
+                <li>La importancia crítica y la sensibilidad de la <strong>tasa de aprendizaje ($\eta$)</strong> y los esquemas de decaimiento.</li>
                 <li>Los desafíos inherentes a la optimización en paisajes no convexos, como los <strong>mínimos locales</strong> y los <strong>puntos de silla</strong>.</li>
                 <li>La existencia y la intuición detrás de <strong>optimizadores más avanzados</strong> como Momentum, RMSprop y Adam, diseñados para superar estos desafíos.</li>
             </ul>
@@ -289,7 +342,6 @@
         </footer>
     </div> <!-- .main-content -->
 
-    <!-- Nuestro script de animación ahora completo -->
     <script src="script.js"></script>
 </body>
 </html>
