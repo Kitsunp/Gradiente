@@ -118,12 +118,16 @@
             border-radius: 0.375rem;
             box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
         }
-        .controls button, .controls input[type="number"], .controls input[type="text"] { 
+        .controls button, .controls input[type="number"], .controls input[type="text"], .controls input[type="range"] { 
             margin: 0.25rem;
             padding: 0.5rem 0.75rem; 
             border-radius: 0.25rem;
             border: 1px solid #ced4da;
             font-size: 0.9rem;
+            vertical-align: middle;
+        }
+        .controls input[type="range"] {
+            padding: 0; /* Range inputs often need specific styling */
         }
         .controls button {
             background-color: #007bff;
@@ -137,6 +141,7 @@
         .controls label {
             margin-right: 0.5rem;
             font-weight: 500;
+            vertical-align: middle;
         }
         .interactive-container { 
             display: flex;
@@ -330,38 +335,52 @@
             </div>
 
             <div id="example4-2d-perceptron" class="mt-10">
-                <h3>Ejemplo 4 (2D): Clasificador Lineal (Perceptrón)</h3>
-                <p>Visualiza cómo un Perceptrón aprende a separar dos clases de puntos en un plano 2D ($x \in [-5, 5], y \in [-5, 5]$) ajustando una línea de decisión: $w_x x + w_y y + b = 0$.</p>
+                <h3>Ejemplo 4 (2D): Clasificador Lineal Múltiple (Capa de Perceptrones)</h3>
+                <p>Visualiza cómo una capa de Perceptrones independientes aprende a separar dos clases de puntos. Cada Perceptrón tiene su propia línea de decisión. $x, y \in [-5, 5]$.</p>
                 <div class="interactive-container">
                     <div class="controls">
-                        <label for="learningRate_ex4_input">Tasa Aprendizaje ($\eta$):</label>
-                        <input type="number" id="learningRate_ex4_input" value="0.05" step="0.001" min="0.001" max="0.5">
-                        <button id="generateData_ex4">Nuevos Datos</button>
-                        <button id="startButton_ex4">Iniciar</button>
-                        <button id="pauseButton_ex4">Pausar</button>
-                        <button id="resetButton_ex4">Reiniciar</button>
-                        <button id="stepButton_ex4">Un Paso</button>
+                        <div>
+                            <label for="numNeurons_ex4_input"># Neuronas (Perceptrones):</label>
+                            <input type="range" id="numNeurons_ex4_input" value="5" min="3" max="20" step="1">
+                            <span id="numNeurons_ex4_display" class="ml-2 font-semibold">5</span>
+                        </div>
+                        <div class="mt-2">
+                            <label for="learningRate_ex4_input">Tasa Aprendizaje ($\eta$):</label>
+                            <input type="number" id="learningRate_ex4_input" value="0.05" step="0.001" min="0.001" max="0.5">
+                            <button id="generateData_ex4">Nuevos Datos</button>
+                        </div>
+                        <div class="mt-2">
+                            <button id="startButton_ex4">Iniciar</button>
+                            <button id="pauseButton_ex4">Pausar</button>
+                            <button id="resetButton_ex4">Reiniciar</button>
+                            <button id="stepButton_ex4">Un Paso</button>
+                        </div>
                         <div class="info-display mt-2">
-                            <p>Iteración: <span id="iterationCount_ex4">0</span></p>
-                            <p>Ecuación: <span id="weights_ex4_wx">wx</span>x + <span id="weights_ex4_wy">wy</span>y + <span id="weights_ex4_b">b</span> = 0</p>
-                            <p>Precisión: <span id="accuracy_ex4">N/A</span></p>
+                            <p>Iteración Global: <span id="iterationCount_ex4">0</span></p>
+                            <p>Perceptrón Activo: #<span id="activeNeuronId_ex4">1</span></p>
+                            <p>Ecuación (Activo): <span id="weights_ex4_wx">wx</span>x + <span id="weights_ex4_wy">wy</span>y + <span id="weights_ex4_b">b</span> = 0</p>
+                            <p>Precisión (Activo): <span id="accuracy_active_ex4">N/A</span></p>
+                            <p>Precisión Promedio (Todos): <span id="accuracy_avg_ex4">N/A</span></p>
                         </div>
                     </div>
-                    <svg id="example-svg-ex4" width="400" height="400" viewBox="0 0 400 400" class="example-svg"></svg>
+                    <svg id="example-svg-ex4" width="450" height="450" viewBox="0 0 450 450" class="example-svg"></svg>
                 </div>
                 <div id="explanation-ex4" class="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
                     <h4>¿Cómo funciona este ejemplo?</h4>
                     <ol class="list-decimal list-inside text-sm">
-                        <li><strong>Datos:</strong> Se generan puntos $(x_i, y_i)$ para dos clases (etiquetas $t_i \in \{-1, 1\}$), intentando que sean linealmente separables.</li>
-                        <li><strong>Inicialización:</strong> Pesos $w_x, w_y$ y sesgo $b$ a cero o valores aleatorios pequeños.</li>
-                        <li><strong>Predicción:</strong> Para cada punto, se calcula la activación $a_i = w_x x_i + w_y y_i + b$. La clase predicha es $\hat{t}_i = \text{sign}(a_i)$ (donde $\text{sign}(0)$ se puede tomar como 1).</li>
-                        <li><strong>Actualización (Regla del Perceptrón):</strong> Si un punto es mal clasificado ($\hat{t}_i \neq t_i$):
+                        <li><strong>Capa de Perceptrones:</strong> Se simulan múltiples Perceptrones independientes. El número se puede ajustar (3-20).</li>
+                        <li><strong>Datos:</strong> Se generan puntos $(x_i, y_i)$ para dos clases (etiquetas $t_i \in \{-1, 1\}$).</li>
+                        <li><strong>Inicialización:</strong> Cada Perceptrón tiene pesos $w_x, w_y$ y sesgo $b$ inicializados aleatoriamente.</li>
+                        <li><strong>Perceptrón Activo:</strong> En cada paso de actualización, un Perceptrón se selecciona como "activo" de forma rotativa.</li>
+                        <li><strong>Predicción (por Perceptrón):</strong> $a_i = w_x x_i + w_y y_i + b$. Clase predicha $\hat{t}_i = \text{sign}(a_i)$.</li>
+                        <li><strong>Actualización (Regla del Perceptrón para el Activo):</strong> Si el Perceptrón activo clasifica mal un punto aleatorio:
                             <div class="math-formula">$w_x \leftarrow w_x + \eta \cdot t_i \cdot x_i$</div>
                             <div class="math-formula">$w_y \leftarrow w_y + \eta \cdot t_i \cdot y_i$</div>
                             <div class="math-formula">$b \leftarrow b + \eta \cdot t_i$</div>
+                        (Solo se actualizan los pesos del Perceptrón activo).
                         </li>
-                        <li><strong>Repetir:</strong> Se itera sobre los puntos (o aleatoriamente) hasta que todos se clasifican correctamente o se alcanza un límite de iteraciones.</li>
-                        <li><strong>Precisión:</strong> Porcentaje de puntos clasificados correctamente.</li>
+                        <li><strong>Visualización:</strong> Se dibujan las líneas de decisión de todos los Perceptrones. La del activo se resalta.</li>
+                        <li><strong>Precisión:</strong> Se muestra la precisión del Perceptrón activo y la precisión promedio de todos.</li>
                     </ol>
                 </div>
             </div>
@@ -375,7 +394,7 @@
 
     <script>
         // --- Variables Globales y Funciones de Utilidad ---
-        function showMessage(message, duration = 2000) { // Reduced default duration
+        function showMessage(message, duration = 2000) { 
             const messageBox = document.getElementById('custom-message-box');
             if (!messageBox) return;
             messageBox.textContent = message;
@@ -402,7 +421,7 @@
         };
         
         // --- Gestión de Subtemas y Pestañas ---
-        const subtopicsData = [
+        const subtopicsData = [ // Contenido de subtemas omitido por brevedad, es el mismo que antes
              {
                 title: "1. Redes y Aprendizaje",
                 content: `
@@ -584,6 +603,7 @@
             }
         ];
 
+
         const tabsContainer = document.getElementById('tabs-container');
         const tabContentContainer = document.getElementById('tab-content-container');
 
@@ -623,21 +643,18 @@
                 this.svg = document.getElementById(svgId);
                 if (!this.svg) {
                     console.error(`SVG element with ID ${svgId} not found for ${idPrefix}.`);
-                    return; // Early exit if SVG is not found
+                    return; 
                 }
-                this.svgWidth = parseInt(this.svg.getAttribute('width')) || 400; // Default width
-                this.svgHeight = parseInt(this.svg.getAttribute('height')) || 400; // Default height
+                this.svgWidth = parseInt(this.svg.getAttribute('width')) || 400; 
+                this.svgHeight = parseInt(this.svg.getAttribute('height')) || 400; 
 
                 this.animationFrameId = null;
                 this.isPaused = true;
                 this.iterationCount = 0;
                 this.lastFrameTime = 0;
-
-                // Bind the loop method to this instance to maintain context in requestAnimationFrame
                 this._loop = this._loop.bind(this);
             }
 
-            // Method to create SVG elements, useful for subclasses
             _createSvgElement(tag, attributes) {
                 const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
                 for (const key in attributes) {
@@ -646,7 +663,6 @@
                 return el;
             }
 
-            // Core animation loop
             _loop() {
                 this.animationFrameId = requestAnimationFrame(this._loop);
                 const now = performance.now();
@@ -655,18 +671,17 @@
                 if (elapsed > GlobalAnimSettings.fpsInterval) {
                     this.lastFrameTime = now - (elapsed % GlobalAnimSettings.fpsInterval);
                     if (!this.isPaused) {
-                        this.step(); // Perform simulation logic
-                        this.draw(); // Update visualization
+                        this.step(); 
+                        this.draw(); 
                     }
                 }
             }
 
-            // Public methods for controlling the simulation
             start() {
                 if (this.isPaused) {
                     this.isPaused = false;
-                    this.lastFrameTime = performance.now(); // Reset time for smooth start
-                    if (!this.animationFrameId) this._loop(); // Start loop if not already running
+                    this.lastFrameTime = performance.now(); 
+                    if (!this.animationFrameId) this._loop(); 
                     showMessage(`Simulación ${this.idPrefix.toUpperCase()} iniciada.`);
                 }
             }
@@ -676,7 +691,6 @@
                 showMessage(`Simulación ${this.idPrefix.toUpperCase()} pausada.`);
             }
             
-            // Abstract methods to be implemented by subclasses
             initDOMAndListeners() { throw new Error("Method 'initDOMAndListeners()' must be implemented."); }
             reset() { throw new Error("Method 'reset()' must be implemented."); }
             step() { throw new Error("Method 'step()' must be implemented."); }
@@ -771,7 +785,6 @@
             draw() {
                 if (!this.svg) return;
                 this.svg.innerHTML = ''; 
-                const ns = "http://www.w3.org/2000/svg";
 
                 this.svg.appendChild(this._createSvgElement('line', {x1:this.mapXToSVG(0), y1:this.mapYToSVG(0), x2:this.mapXToSVG(this.maxXData), y2:this.mapYToSVG(0), stroke:'#aaa'}));
                 this.svg.appendChild(this._createSvgElement('line', {x1:this.mapXToSVG(0), y1:this.mapYToSVG(0), x2:this.mapXToSVG(0), y2:this.mapYToSVG(this.maxYData), stroke:'#aaa'}));
@@ -1000,38 +1013,51 @@
             }
         }
         
-        // --- Ejemplo 4: Clasificador Lineal (Perceptrón) ---
-        class PerceptronExample extends InteractiveExample {
+        // --- Ejemplo 4: Clasificador Lineal Múltiple (Capa de Perceptrones) ---
+        class MultiPerceptronExample extends InteractiveExample {
             constructor() {
-                super('ex4', 'example-svg-ex4');
+                super('ex4', 'example-svg-ex4'); // Reutiliza el prefijo y SVG ID
                 this.padding = 40;
-                this.dataRange = 5; // Data x, y will be from -dataRange to +dataRange
-                this.dataPoints = []; // {x, y, type: -1 or 1}
-                this.wx = 0; // Weight for x
-                this.wy = 0; // Weight for y
-                this.b = 0;  // Bias
+                this.dataRange = 5; 
+                this.dataPoints = []; 
+                this.perceptrons = []; // Array de objetos { wx, wy, b, id }
+                this.numNeurons = 5; // Default number of perceptrons
+                this.activeNeuronIndex = 0; // Index of the perceptron currently being focused/updated
                 this.learningRate = 0.05;
                 this.initDOMAndListeners();
                 this.reset();
             }
 
             initDOMAndListeners() {
+                this.numNeuronsInput = document.getElementById('numNeurons_ex4_input');
+                this.numNeuronsDisplay = document.getElementById('numNeurons_ex4_display');
                 this.learningRateInput = document.getElementById('learningRate_ex4_input');
-                this.iterationCountDisplay = document.getElementById('iterationCount_ex4');
+                this.iterationCountDisplay = document.getElementById('iterationCount_ex4'); // Iteración global
+                this.activeNeuronIdDisplay = document.getElementById('activeNeuronId_ex4');
                 this.weightsWxDisplay = document.getElementById('weights_ex4_wx');
                 this.weightsWyDisplay = document.getElementById('weights_ex4_wy');
                 this.weightsBDisplay = document.getElementById('weights_ex4_b');
-                this.accuracyDisplay = document.getElementById('accuracy_ex4');
+                this.accuracyActiveDisplay = document.getElementById('accuracy_active_ex4');
+                this.accuracyAvgDisplay = document.getElementById('accuracy_avg_ex4');
+
+                this.numNeuronsInput.addEventListener('input', (event) => { // 'input' for live update
+                    this.numNeurons = parseInt(event.target.value);
+                    this.numNeuronsDisplay.textContent = this.numNeurons;
+                });
+                this.numNeuronsInput.addEventListener('change', () => { // 'change' for final update and reset
+                    this.reset(); // Reset with the new number of neurons
+                     showMessage(`Número de Perceptrones ajustado a ${this.numNeurons}. Simulación reiniciada.`);
+                });
 
                 document.getElementById('generateData_ex4').addEventListener('click', () => {
-                    this.generateData(); // Generate new data
-                    this.resetWeightsAndBias(); // Reset weights, keep new data
-                    this.draw(); // Redraw with new data and reset line
+                    this.generateData(); 
+                    this.resetAllPerceptrons(); 
+                    this.draw(); 
                     showMessage("Nuevos datos generados para Ejemplo 4.");
                 });
                 document.getElementById('startButton_ex4').addEventListener('click', () => this.start());
                 document.getElementById('pauseButton_ex4').addEventListener('click', () => this.pause());
-                document.getElementById('resetButton_ex4').addEventListener('click', () => this.reset()); // Full reset
+                document.getElementById('resetButton_ex4').addEventListener('click', () => this.reset());
                 document.getElementById('stepButton_ex4').addEventListener('click', () => {
                     this.pause(); this.step(); this.draw(); showMessage("Un paso Ejemplo 4 realizado.");
                 });
@@ -1053,138 +1079,164 @@
 
             generateData(numPointsPerClass = 25) {
                 this.dataPoints = [];
-                // Generate two somewhat separable clusters
                 const offset = this.dataRange / 3;
-                // Class 1 (-1)
                 for (let i = 0; i < numPointsPerClass; i++) {
                     this.dataPoints.push({
-                        x: (Math.random() * this.dataRange * 0.8) - this.dataRange * 0.4 - offset,
-                        y: (Math.random() * this.dataRange * 0.8) - this.dataRange * 0.4 - offset,
+                        x: (Math.random() * this.dataRange * 0.8) - this.dataRange * 0.4 - offset + (Math.random()-0.5)*1.5,
+                        y: (Math.random() * this.dataRange * 0.8) - this.dataRange * 0.4 - offset + (Math.random()-0.5)*1.5,
                         type: -1
                     });
                 }
-                // Class 2 (+1)
                 for (let i = 0; i < numPointsPerClass; i++) {
                     this.dataPoints.push({
-                        x: (Math.random() * this.dataRange * 0.8) - this.dataRange * 0.4 + offset,
-                        y: (Math.random() * this.dataRange * 0.8) - this.dataRange * 0.4 + offset,
+                        x: (Math.random() * this.dataRange * 0.8) - this.dataRange * 0.4 + offset + (Math.random()-0.5)*1.5,
+                        y: (Math.random() * this.dataRange * 0.8) - this.dataRange * 0.4 + offset + (Math.random()-0.5)*1.5,
                         type: 1
                     });
                 }
-                 // Shuffle data
                 for (let i = this.dataPoints.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [this.dataPoints[i], this.dataPoints[j]] = [this.dataPoints[j], this.dataPoints[i]];
                 }
             }
             
-            resetWeightsAndBias() {
-                this.wx = Math.random() * 0.2 - 0.1; // Small random weights
-                this.wy = Math.random() * 0.2 - 0.1;
-                this.b = 0;
-                this.iterationCount = 0; // Reset iteration count when weights reset
+            resetAllPerceptrons() {
+                this.perceptrons = [];
+                for (let i = 0; i < this.numNeurons; i++) {
+                    this.perceptrons.push({
+                        id: i + 1,
+                        wx: Math.random() * 0.4 - 0.2, // Small random weights between -0.2 and 0.2
+                        wy: Math.random() * 0.4 - 0.2,
+                        b: Math.random() * 0.2 - 0.1   // Small random bias between -0.1 and 0.1
+                    });
+                }
+                this.activeNeuronIndex = 0;
+                this.iterationCount = 0; 
             }
 
             reset() {
                 this.pause();
+                this.numNeurons = parseInt(this.numNeuronsInput.value); // Ensure numNeurons is up-to-date
+                this.numNeuronsDisplay.textContent = this.numNeurons;
                 this.generateData();
-                this.resetWeightsAndBias();
+                this.resetAllPerceptrons();
                 const lrValue = parseFloat(this.learningRateInput.value);
                 this.learningRate = (!isNaN(lrValue) && lrValue > 0.0001 && lrValue <= 0.5) ? lrValue : 0.05;
                 this.learningRateInput.value = this.learningRate;
                 this.draw();
-                if(this.accuracyDisplay) this.accuracyDisplay.textContent = "N/A";
+                if(this.accuracyActiveDisplay) this.accuracyActiveDisplay.textContent = "N/A";
+                if(this.accuracyAvgDisplay) this.accuracyAvgDisplay.textContent = "N/A";
                 showMessage("Simulación Ejemplo 4 reiniciada.");
             }
             
-            _predict(x, y) {
-                const activation = this.wx * x + this.wy * y + this.b;
+            _predict(perceptron, x, y) {
+                const activation = perceptron.wx * x + perceptron.wy * y + perceptron.b;
                 return activation >= 0 ? 1 : -1;
             }
 
             step() {
-                if (this.dataPoints.length === 0) return;
-                // Pick a random point to update on (stochastic perceptron)
-                const point = this.dataPoints[Math.floor(Math.random() * this.dataPoints.length)];
+                if (this.dataPoints.length === 0 || this.perceptrons.length === 0) return;
                 
-                const prediction = this._predict(point.x, point.y);
+                const currentPerceptron = this.perceptrons[this.activeNeuronIndex];
+                if (!currentPerceptron) return;
+
+                // Pick a random point to update on
+                const point = this.dataPoints[Math.floor(Math.random() * this.dataPoints.length)];
+                const prediction = this._predict(currentPerceptron, point.x, point.y);
                 
                 if (prediction !== point.type) {
-                    this.wx += this.learningRate * point.type * point.x;
-                    this.wy += this.learningRate * point.type * point.y;
-                    this.b  += this.learningRate * point.type;
+                    currentPerceptron.wx += this.learningRate * point.type * point.x;
+                    currentPerceptron.wy += this.learningRate * point.type * point.y;
+                    currentPerceptron.b  += this.learningRate * point.type;
                 }
-                this.iterationCount++;
+                
+                this.iterationCount++; // Global iteration count
+                // Rotate to the next active neuron for the next step
+                this.activeNeuronIndex = (this.activeNeuronIndex + 1) % this.numNeurons;
             }
 
-            _calculateAccuracy() {
+            _calculateAccuracyForPerceptron(perceptron) {
                 if (this.dataPoints.length === 0) return 0;
                 let correctCount = 0;
                 this.dataPoints.forEach(point => {
-                    if (this._predict(point.x, point.y) === point.type) {
+                    if (this._predict(perceptron, point.x, point.y) === point.type) {
                         correctCount++;
                     }
                 });
                 return (correctCount / this.dataPoints.length) * 100;
             }
 
+            _calculateAverageAccuracy() {
+                if (this.perceptrons.length === 0) return 0;
+                let totalAccuracy = 0;
+                this.perceptrons.forEach(p => {
+                    totalAccuracy += this._calculateAccuracyForPerceptron(p);
+                });
+                return totalAccuracy / this.perceptrons.length;
+            }
+
             draw() {
                 if (!this.svg) return;
                 this.svg.innerHTML = '';
 
-                // Draw Axes
                 this.svg.appendChild(this._createSvgElement('line', {x1:this._mapToSVG(-this.dataRange), y1:this._mapToSVG(0), x2:this._mapToSVG(this.dataRange), y2:this._mapToSVG(0), stroke:'#ccc'}));
                 this.svg.appendChild(this._createSvgElement('line', {x1:this._mapToSVG(0), y1:this._mapToSVG(-this.dataRange), x2:this._mapToSVG(0), y2:this._mapToSVG(this.dataRange), stroke:'#ccc'}));
 
-                // Draw points
                 this.dataPoints.forEach(point => {
                     this.svg.appendChild(this._createSvgElement('circle', {
                         cx: this._mapToSVG(point.x), 
                         cy: this._mapToSVG(point.y), 
                         r: 4, 
-                        fill: point.type === 1 ? '#2563eb' : '#dc2626' // Blue for class 1, Red for class -1
+                        fill: point.type === 1 ? '#3b82f6' : '#ef4444' // Blue for class 1, Red for class -1
                     }));
                 });
 
-                // Draw decision boundary: wx * x + wy * y + b = 0
-                // If wy != 0, y = (-wx * x - b) / wy
-                // If wy == 0, x = -b / wx (vertical line)
-                let x1_svg, y1_svg, x2_svg, y2_svg;
-                const x_min_data = -this.dataRange;
-                const x_max_data = this.dataRange;
+                // Draw decision boundaries for all perceptrons
+                this.perceptrons.forEach((p, index) => {
+                    let x1_svg, y1_svg, x2_svg, y2_svg;
+                    const x_min_data = -this.dataRange;
+                    const x_max_data = this.dataRange;
+                    const isActive = index === this.activeNeuronIndex;
 
-                if (Math.abs(this.wy) > 1e-5) { // Non-vertical line
-                    let y1_data = (-this.wx * x_min_data - this.b) / this.wy;
-                    let y2_data = (-this.wx * x_max_data - this.b) / this.wy;
-                    x1_svg = this._mapToSVG(x_min_data);
-                    y1_svg = this._mapToSVG(y1_data);
-                    x2_svg = this._mapToSVG(x_max_data);
-                    y2_svg = this._mapToSVG(y2_data);
-                } else if (Math.abs(this.wx) > 1e-5) { // Vertical line
-                    let x_data = -this.b / this.wx;
-                    x1_svg = this._mapToSVG(x_data);
-                    y1_svg = this._mapToSVG(-this.dataRange); // Top of SVG plotting area
-                    x2_svg = this._mapToSVG(x_data);
-                    y2_svg = this._mapToSVG(this.dataRange);  // Bottom of SVG plotting area
-                } else { // Line is undefined (wx and wy are both near zero)
-                    // Don't draw the line
-                    x1_svg = x2_svg = y1_svg = y2_svg = 0; // effectively hide it
-                }
-                 if (x1_svg !== 0 || y1_svg !==0 ) { // only draw if line is defined
-                    this.svg.appendChild(this._createSvgElement('line', {
-                        x1: x1_svg, y1: y1_svg,
-                        x2: x2_svg, y2: y2_svg,
-                        stroke: '#34d399', 'stroke-width': 2 // Green line
-                    }));
-                 }
-
+                    if (Math.abs(p.wy) > 1e-5) { 
+                        let y1_data = (-p.wx * x_min_data - p.b) / p.wy;
+                        let y2_data = (-p.wx * x_max_data - p.b) / p.wy;
+                        x1_svg = this._mapToSVG(x_min_data); y1_svg = this._mapToSVG(y1_data);
+                        x2_svg = this._mapToSVG(x_max_data); y2_svg = this._mapToSVG(y2_data);
+                    } else if (Math.abs(p.wx) > 1e-5) { 
+                        let x_data = -p.b / p.wx;
+                        x1_svg = this._mapToSVG(x_data); y1_svg = this._mapToSVG(-this.dataRange);
+                        x2_svg = this._mapToSVG(x_data); y2_svg = this._mapToSVG(this.dataRange);
+                    } else { 
+                        x1_svg = x2_svg = y1_svg = y2_svg = 0; 
+                    }
+                    if (x1_svg !== 0 || y1_svg !==0 ) {
+                        this.svg.appendChild(this._createSvgElement('line', {
+                            x1: x1_svg, y1: y1_svg, x2: x2_svg, y2: y2_svg,
+                            stroke: isActive ? '#10b981' : '#a5f3fc', // Active: Green, Inactive: Light Cyan
+                            'stroke-width': isActive ? 2.5 : 1.5,
+                            opacity: isActive ? 1 : 0.6
+                        }));
+                    }
+                });
 
                 // Update displays
                 this.iterationCountDisplay.textContent = this.iterationCount;
-                this.weightsWxDisplay.textContent = this.wx.toFixed(2);
-                this.weightsWyDisplay.textContent = this.wy.toFixed(2);
-                this.weightsBDisplay.textContent = this.b.toFixed(2);
-                this.accuracyDisplay.textContent = this._calculateAccuracy().toFixed(1) + '%';
+                const activeP = this.perceptrons[this.activeNeuronIndex];
+                if (activeP) {
+                    this.activeNeuronIdDisplay.textContent = activeP.id;
+                    this.weightsWxDisplay.textContent = activeP.wx.toFixed(2);
+                    this.weightsWyDisplay.textContent = activeP.wy.toFixed(2);
+                    this.weightsBDisplay.textContent = activeP.b.toFixed(2);
+                    this.accuracyActiveDisplay.textContent = this._calculateAccuracyForPerceptron(activeP).toFixed(1) + '%';
+                } else {
+                     this.activeNeuronIdDisplay.textContent = "N/A";
+                     this.weightsWxDisplay.textContent = "N/A";
+                     this.weightsWyDisplay.textContent = "N/A";
+                     this.weightsBDisplay.textContent = "N/A";
+                     this.accuracyActiveDisplay.textContent = "N/A";
+                }
+                this.accuracyAvgDisplay.textContent = this._calculateAverageAccuracy().toFixed(1) + '%';
             }
         }
 
@@ -1199,19 +1251,16 @@
                 });
             }
 
-            // Initialize examples
             try {
                 const ex1 = new LinearRegressionExample();
                 const ex2 = new SimpleNeuronExample();
                 const ex3 = new GradientDescent2DExample();
-                const ex4 = new PerceptronExample();
+                const ex4 = new MultiPerceptronExample(); // Changed from PerceptronExample
             } catch (e) {
                 console.error("Error initializing one or more examples:", e);
                 showMessage("Error al inicializar ejemplos interactivos. Ver consola.", 5000);
             }
             
-            // MathJax should be ready by now due to its own startup config
-            // but ensure explanations are typeset if content was added dynamically (not the case here for explanations)
              if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
                 ['explanation-ex1', 'explanation-ex2', 'explanation-ex3', 'explanation-ex4'].forEach(id => {
                     const explanationSection = document.getElementById(id);
