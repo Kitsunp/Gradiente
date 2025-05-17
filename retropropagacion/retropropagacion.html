@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retropropagación Interactiva</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            },
+            startup: {
+                ready: () => {
+                    console.log('MathJax is ready to go!');
+                    MathJax.startup.defaultReady();
+                    const introSection = document.getElementById('introduction');
+                    if (introSection) {
+                        MathJax.typesetPromise([introSection]).catch((err) => console.error('MathJax typesetting error on intro:', err));
+                    }
+                    const activeTabContent = document.querySelector('.tab-content.active');
+                    if (activeTabContent) {
+                        MathJax.typesetPromise([activeTabContent]).catch((err) => console.error('MathJax typesetting error on initial active tab:', err));
+                    }
+                    // Asegurarse de renderizar LaTeX en las explicaciones de todos los ejemplos
+                    ['explanation-ex1', 'explanation-ex2', 'explanation-ex3', 'explanation-ex4'].forEach(id => {
+                        const explanationSection = document.getElementById(id);
+                        if (explanationSection) MathJax.typesetPromise([explanationSection]);
+                    });
+                }
+            }
+        };
+    </script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+        .content-section {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            margin-right: 0.5rem;
+            margin-bottom: -1px;
+            border: 1px solid #dee2e6;
+            border-bottom: none;
+            border-radius: 0.375rem 0.375rem 0 0;
+            background-color: #e9ecef;
+            color: #495057;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            font-weight: 600;
+        }
+        .tab-button.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .tab-content {
+            display: none;
+            padding: 1.5rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0 0 0.375rem 0.375rem;
+            background-color: white;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #007bff;
+            margin-bottom: 1rem;
+        }
+        h3 {
+            font-size: 1.5rem; 
+            font-weight: 600;
+            color: #2a6cb2; 
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        h4 { 
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #343a40;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        p, li {
+            line-height: 1.6;
+            margin-bottom: 0.75rem;
+        }
+        code.inline-code {
+            background-color: #e9ecef;
+            padding: 0.2em 0.4em;
+            margin: 0;
+            font-size: 85%;
+            border-radius: 3px;
+        }
+        .controls {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background-color: #f0f8ff; 
+            border-radius: 0.375rem;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .controls button, .controls input[type="number"], .controls input[type="text"] { 
+            margin: 0.25rem;
+            padding: 0.5rem 0.75rem; 
+            border-radius: 0.25rem;
+            border: 1px solid #ced4da;
+            font-size: 0.9rem;
+        }
+        .controls button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .controls button:hover {
+            background-color: #0056b3;
+        }
+        .controls label {
+            margin-right: 0.5rem;
+            font-weight: 500;
+        }
+        .interactive-container { 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .example-svg { 
+            border: 1px solid #ccc;
+            background-color: #fff;
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.25rem;
+        }
+        .math-formula {
+            margin: 1rem 0;
+            padding: 0.75rem;
+            background-color: #f0f0f0;
+            border-left: 4px solid #007bff;
+            overflow-x: auto;
+            font-size: 0.95em;
+        }
+        .message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+        }
+        .info-display p { margin-bottom: 0.25rem; font-size: 0.9em;}
+        .info-display span { font-weight: bold; color: #0056b3; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div id="custom-message-box" class="message-box"></div>
+
+    <header class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-blue-600">Entendiendo la Retropropagación (Backpropagation)</h1>
+        <p class="text-lg text-gray-700 mt-2">Una guía interactiva para aprender el algoritmo fundamental del Deep Learning.</p>
+    </header>
+
+    <main>
+        <section id="introduction" class="content-section">
+            <h2>¿Qué es la Retropropagación?</h2>
+            <p>La retropropagación es un algoritmo fundamental utilizado para entrenar redes neuronales artificiales. Su nombre completo es "propagación hacia atrás de errores" (backward propagation of errors). En esencia, permite a la red aprender de sus errores ajustando sus parámetros internos (pesos y sesgos) de manera eficiente.</p>
+        </section>
+
+        <section id="subtopics" class="content-section">
+            <h2>Subtemas Detallados de la Retropropagación</h2>
+            <div id="tabs-container" class="mb-4 flex flex-wrap border-b border-gray-300">
+                </div>
+            <div id="tab-content-container">
+                </div>
+        </section>
+
+        <section class="content-section">
+            <h2>Controles Globales</h2>
+            <div class="controls">
+                <label for="fpsControl">FPS Animaciones:</label>
+                <input type="number" id="fpsControl" value="30" min="1" max="120" class="w-20">
+            </div>
+        </section>
+
+        <section id="interactive-examples" class="content-section">
+            <h2>Ejemplos Interactivos</h2>
+            <p>Aquí puedes experimentar con los conceptos de la retropropagación de forma práctica.</p>
+            
+            <div id="example1-1d-linear-regression" class="mt-6">
+                <h3>Ejemplo 1 (1D): Regresión Lineal</h3>
+                <p>Visualiza cómo el algoritmo de descenso de gradiente encuentra la línea ($y = mx + c$) que mejor se ajusta a un conjunto de puntos. Los datos $x$ se generan en un rango de 0 a 10.</p>
+                <div class="interactive-container">
+                    <div class="controls">
+                        <label for="learningRate_ex1_input">Tasa Aprendizaje ($\eta$):</label>
+                        <input type="number" id="learningRate_ex1_input" value="0.005" step="0.0001" min="0.0001" max="0.1">
+                        <button id="startButton_ex1">Iniciar</button>
+                        <button id="pauseButton_ex1">Pausar</button>
+                        <button id="resetButton_ex1">Reiniciar</button>
+                        <button id="stepButton_ex1">Un Paso</button>
+                        <div class="info-display mt-2">
+                            <p>Iteración: <span id="iterationCount_ex1">0</span></p>
+                            <p>Error (MSE): <span id="errorValue_ex1">N/A</span></p>
+                            <p>Ecuación: $y = <span id="slopeValue_ex1">m</span>x + <span id="interceptValue_ex1">c</span>$</p>
+                        </div>
+                    </div>
+                    <svg id="example-svg-ex1" width="600" height="400" viewBox="0 0 600 400" class="example-svg"></svg>
+                </div>
+                <div id="explanation-ex1" class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <h4>¿Cómo funciona este ejemplo?</h4>
+                    <ol class="list-decimal list-inside text-sm">
+                        <li><strong>Datos:</strong> Se generan puntos $(x, y)$ con relación lineal aproximada.</li>
+                        <li><strong>Inicialización:</strong> $m$ y $c$ con valores aleatorios.</li>
+                        <li><strong>Predicción:</strong> $\hat{y}_i = m x_i + c$.</li>
+                        <li><strong>Error (MSE):</strong> $L = \frac{1}{N} \sum (y_i - \hat{y}_i)^2$.</li>
+                        <li><strong>Gradientes:</strong> $\frac{\partial L}{\partial m} = -\frac{2}{N} \sum x_i (y_i - \hat{y}_i)$, $\frac{\partial L}{\partial c} = -\frac{2}{N} \sum (y_i - \hat{y}_i)$.</li>
+                        <li><strong>Actualización:</strong> $m \leftarrow m - \eta \frac{\partial L}{\partial m}$, $c \leftarrow c - \eta \frac{\partial L}{\partial c}$.</li>
+                        <li><strong>Repetir.</strong></li>
+                    </ol>
+                </div>
+            </div>
+
+            <div id="example2-1d-simple-neuron" class="mt-10">
+                <h3>Ejemplo 2 (1D): Neurona Simple</h3>
+                <p>Observa cómo una única neurona con función de activación sigmoide aprende a mapear una entrada $x$ a una salida objetivo $y_{true}$ ajustando su peso $w$ y sesgo $b$. Ecuación: $\hat{y} = \sigma(wx + b)$.</p>
+                <div class="interactive-container">
+                    <div class="controls">
+                        <label for="inputX_ex2_input">Entrada (x):</label>
+                        <input type="number" id="inputX_ex2_input" value="0.5" step="0.1">
+                        <label for="targetY_ex2_input">Salida Objetivo (y_true):</label>
+                        <input type="number" id="targetY_ex2_input" value="0.8" step="0.1" min="0" max="1">
+                        <label for="learningRate_ex2_input">Tasa Aprendizaje ($\eta$):</label>
+                        <input type="number" id="learningRate_ex2_input" value="0.1" step="0.01" min="0.001" max="1">
+                        <button id="startButton_ex2">Iniciar</button>
+                        <button id="pauseButton_ex2">Pausar</button>
+                        <button id="resetButton_ex2">Reiniciar</button>
+                        <button id="stepButton_ex2">Un Paso</button>
+                        <div class="info-display mt-2">
+                            <p>Iteración: <span id="iterationCount_ex2">0</span></p>
+                            <p>Peso (w): <span id="weightW_ex2">0</span></p>
+                            <p>Sesgo (b): <span id="biasB_ex2">0</span></p>
+                            <p>Suma Ponderada (z): <span id="z_ex2">0</span></p>
+                            <p>Salida ($\hat{y}$): <span id="outputY_ex2">0</span></p>
+                            <p>Error (MSE): <span id="errorValue_ex2">N/A</span></p>
+                        </div>
+                    </div>
+                    <svg id="example-svg-ex2" width="600" height="250" viewBox="0 0 600 250" class="example-svg"></svg>
+                </div>
+                <div id="explanation-ex2" class="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
+                    <h4>¿Cómo funciona este ejemplo?</h4>
+                    <ol class="list-decimal list-inside text-sm">
+                        <li><strong>Entrada y Objetivo:</strong> Se definen $x$ y $y_{true}$.</li>
+                        <li><strong>Inicialización:</strong> Peso $w$ y sesgo $b$ aleatorios o cero.</li>
+                        <li><strong>Paso Adelante (Forward Pass):</strong>
+                            <div class="math-formula">$z = wx + b$</div>
+                            <div class="math-formula">$\hat{y} = \sigma(z) = \frac{1}{1 + e^{-z}}$ (Función Sigmoide)</div>
+                        </li>
+                        <li><strong>Error (MSE):</strong> $L = \frac{1}{2} (\hat{y} - y_{true})^2$.</li>
+                        <li><strong>Gradientes (Paso Atrás - Backpropagation):</strong>
+                            <div class="math-formula">$\\frac{\\partial L}{\\partial w} = (\\hat{y} - y_{true}) \\cdot \\sigma'(z) \\cdot x$</div>
+                            <div class="math-formula">$\\frac{\\partial L}{\\partial b} = (\\hat{y} - y_{true}) \\cdot \\sigma'(z)$</div>
+                            Donde $\sigma'(z) = \sigma(z)(1-\sigma(z))$.
+                        </li>
+                        <li><strong>Actualización de Pesos:</strong>
+                            <div class="math-formula">$w \leftarrow w - \eta \\frac{\\partial L}{\\partial w}$</div>
+                            <div class="math-formula">$b \leftarrow b - \eta \\frac{\\partial L}{\\partial b}$</div>
+                        </li>
+                        <li><strong>Repetir.</strong></li>
+                    </ol>
+                </div>
+            </div>
+
+            <div id="example3-2d-gradient-descent" class="mt-10">
+                <h3>Ejemplo 3 (2D): Descenso de Gradiente</h3>
+                <p>Visualiza el algoritmo de descenso de gradiente encontrando el mínimo de la función $f(x,y) = x^2 + y^2$. Las líneas representan contornos de igual valor.</p>
+                <div class="interactive-container">
+                    <div class="controls">
+                        <label for="startX_ex3_input">X Inicial:</label>
+                        <input type="number" id="startX_ex3_input" value="4" step="0.5" min="-5" max="5">
+                        <label for="startY_ex3_input">Y Inicial:</label>
+                        <input type="number" id="startY_ex3_input" value="4" step="0.5" min="-5" max="5">
+                        <label for="learningRate_ex3_input">Tasa Aprendizaje ($\eta$):</label>
+                        <input type="number" id="learningRate_ex3_input" value="0.1" step="0.01" min="0.01" max="0.5">
+                        <button id="startButton_ex3">Iniciar</button>
+                        <button id="pauseButton_ex3">Pausar</button>
+                        <button id="resetButton_ex3">Reiniciar</button>
+                        <button id="stepButton_ex3">Un Paso</button>
+                        <div class="info-display mt-2">
+                            <p>Iteración: <span id="iterationCount_ex3">0</span></p>
+                            <p>Posición (x,y): (<span id="currentX_ex3">0</span>, <span id="currentY_ex3">0</span>)</p>
+                            <p>Costo (f(x,y)): <span id="costValue_ex3">N/A</span></p>
+                        </div>
+                    </div>
+                    <svg id="example-svg-ex3" width="400" height="400" viewBox="0 0 400 400" class="example-svg"></svg>
+                </div>
+                <div id="explanation-ex3" class="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-md">
+                    <h4>¿Cómo funciona este ejemplo?</h4>
+                    <ol class="list-decimal list-inside text-sm">
+                        <li><strong>Función de Costo:</strong> $f(x,y) = x^2 + y^2$. Mínimo en $(0,0)$.</li>
+                        <li><strong>Inicialización:</strong> Punto $(x,y)$ inicial definido por el usuario.</li>
+                        <li><strong>Gradientes:</strong> $\frac{\partial f}{\partial x} = 2x$, $\frac{\partial f}{\partial y} = 2y$.</li>
+                        <li><strong>Actualización:</strong> $x \leftarrow x - \eta \frac{\partial f}{\partial x}$, $y \leftarrow y - \eta \frac{\partial f}{\partial y}$.</li>
+                        <li><strong>Repetir.</strong></li>
+                    </ol>
+                </div>
+            </div>
+
+            <div id="example4-2d-perceptron" class="mt-10">
+                <h3>Ejemplo 4 (2D): Clasificador Lineal (Perceptrón)</h3>
+                <p>Visualiza cómo un Perceptrón aprende a separar dos clases de puntos en un plano 2D ($x \in [-5, 5], y \in [-5, 5]$) ajustando una línea de decisión: $w_x x + w_y y + b = 0$.</p>
+                <div class="interactive-container">
+                    <div class="controls">
+                        <label for="learningRate_ex4_input">Tasa Aprendizaje ($\eta$):</label>
+                        <input type="number" id="learningRate_ex4_input" value="0.05" step="0.001" min="0.001" max="0.5">
+                        <button id="generateData_ex4">Nuevos Datos</button>
+                        <button id="startButton_ex4">Iniciar</button>
+                        <button id="pauseButton_ex4">Pausar</button>
+                        <button id="resetButton_ex4">Reiniciar</button>
+                        <button id="stepButton_ex4">Un Paso</button>
+                        <div class="info-display mt-2">
+                            <p>Iteración: <span id="iterationCount_ex4">0</span></p>
+                            <p>Ecuación: <span id="weights_ex4_wx">wx</span>x + <span id="weights_ex4_wy">wy</span>y + <span id="weights_ex4_b">b</span> = 0</p>
+                            <p>Precisión: <span id="accuracy_ex4">N/A</span></p>
+                        </div>
+                    </div>
+                    <svg id="example-svg-ex4" width="400" height="400" viewBox="0 0 400 400" class="example-svg"></svg>
+                </div>
+                <div id="explanation-ex4" class="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                    <h4>¿Cómo funciona este ejemplo?</h4>
+                    <ol class="list-decimal list-inside text-sm">
+                        <li><strong>Datos:</strong> Se generan puntos $(x_i, y_i)$ para dos clases (etiquetas $t_i \in \{-1, 1\}$), intentando que sean linealmente separables.</li>
+                        <li><strong>Inicialización:</strong> Pesos $w_x, w_y$ y sesgo $b$ a cero o valores aleatorios pequeños.</li>
+                        <li><strong>Predicción:</strong> Para cada punto, se calcula la activación $a_i = w_x x_i + w_y y_i + b$. La clase predicha es $\hat{t}_i = \text{sign}(a_i)$ (donde $\text{sign}(0)$ se puede tomar como 1).</li>
+                        <li><strong>Actualización (Regla del Perceptrón):</strong> Si un punto es mal clasificado ($\hat{t}_i \neq t_i$):
+                            <div class="math-formula">$w_x \leftarrow w_x + \eta \cdot t_i \cdot x_i$</div>
+                            <div class="math-formula">$w_y \leftarrow w_y + \eta \cdot t_i \cdot y_i$</div>
+                            <div class="math-formula">$b \leftarrow b + \eta \cdot t_i$</div>
+                        </li>
+                        <li><strong>Repetir:</strong> Se itera sobre los puntos (o aleatoriamente) hasta que todos se clasifican correctamente o se alcanza un límite de iteraciones.</li>
+                        <li><strong>Precisión:</strong> Porcentaje de puntos clasificados correctamente.</li>
+                    </ol>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <footer class="text-center mt-12 mb-6">
+        <p class="text-sm text-gray-600">&copy; 2025 Explicación Interactiva de Retropropagación. Creado con fines educativos.</p>
+    </footer>
+
+    <script>
+        // --- Variables Globales y Funciones de Utilidad ---
+        function showMessage(message, duration = 2000) { // Reduced default duration
+            const messageBox = document.getElementById('custom-message-box');
+            if (!messageBox) return;
+            messageBox.textContent = message;
+            messageBox.style.display = 'block';
+            setTimeout(() => {
+                messageBox.style.display = 'none';
+            }, duration);
+        }
+
+        const GlobalAnimSettings = {
+            desiredFPS: 30,
+            fpsInterval: 1000 / 30,
+            updateFPS(newFPSStr) {
+                const newFPS = parseInt(newFPSStr);
+                if (!isNaN(newFPS) && newFPS > 0 && newFPS <= 120) {
+                    this.desiredFPS = newFPS;
+                    this.fpsInterval = 1000 / this.desiredFPS;
+                    showMessage(`FPS ajustado a ${this.desiredFPS}.`);
+                } else {
+                    document.getElementById('fpsControl').value = this.desiredFPS;
+                    showMessage("FPS inválido. Use un valor entre 1 y 120.", 3000);
+                }
+            }
+        };
+        
+        // --- Gestión de Subtemas y Pestañas ---
+        const subtopicsData = [
+             {
+                title: "1. Redes y Aprendizaje",
+                content: `
+                    <h3>1. Introducción a las Redes Neuronales y la Necesidad de Aprender</h3>
+                    <p>Una red neuronal es un modelo computacional inspirado en la estructura y función del cerebro humano. Consiste en unidades interconectadas llamadas <strong class='text-blue-600'>neuronas</strong>, organizadas en <strong class='text-blue-600'>capas</strong> (entrada, ocultas, salida).</p>
+                    <p>El <strong class='text-blue-600'>aprendizaje</strong> en una red neuronal implica ajustar los <strong class='text-blue-600'>pesos</strong> (fuerza de las conexiones) y <strong class='text-blue-600'>sesgos</strong> (biases) de estas neuronas para que la red pueda realizar una tarea específica, como clasificar imágenes o predecir valores.</p>
+                    <p>Cada neurona calcula una suma ponderada de sus entradas, le añade un sesgo, y luego pasa el resultado a través de una <strong class='text-blue-600'>función de activación</strong> no lineal (ej. Sigmoide, ReLU). Esta no linealidad es crucial para que las redes puedan aprender patrones complejos.</p>
+                    <div class="math-formula">Suma ponderada: $z = \\sum_{i} w_i x_i + b$</div>
+                    <div class="math-formula">Activación: $a = \\sigma(z)$ (donde $\\sigma$ es la función de activación)</div>
+                    <img src="https://placehold.co/600x150/e2e8f0/4a5568?text=Diagrama+Simple+de+Neurona" alt="[Diagrama Simple de Neurona]" class="mx-auto my-4 rounded shadow-md">
+                `
+            },
+            {
+                title: "2. Función de Pérdida",
+                content: `
+                    <h3>2. La Función de Pérdida (Costo): Midiendo el Error</h3>
+                    <p>Para que una red aprenda, necesitamos una forma de medir qué tan bien (o mal) está realizando su tarea. Esto se hace mediante una <strong class='text-blue-600'>función de pérdida</strong> (o función de costo).</p>
+                    <p>La función de pérdida compara las predicciones de la red ($y_{pred}$) con los valores verdaderos ($y_{true}$) y devuelve un número que representa el error. El objetivo del entrenamiento es minimizar este valor.</p>
+                    <p>Ejemplos comunes:</p>
+                    <ul class='list-disc list-inside ml-4'>
+                        <li><strong class='text-gray-700'>Error Cuadrático Medio (MSE):</strong> Usado comúnmente en problemas de regresión.
+                            <div class="math-formula">MSE: $L(y_{true}, y_{pred}) = \\frac{1}{N} \\sum_{i=1}^{N} (y_{true,i} - y_{pred,i})^2$</div>
+                        </li>
+                        <li><strong class='text-gray-700'>Entropía Cruzada (Cross-Entropy):</strong> Usada comúnmente en problemas de clasificación.
+                            <div class="math-formula">Entropía Cruzada (binaria): $L = -[y_{true} \\log(y_{pred}) + (1-y_{true}) \\log(1-y_{pred})]$</div>
+                        </li>
+                    </ul>
+                    <img src="https://placehold.co/600x200/e2e8f0/4a5568?text=Gráfico+de+Función+de+Pérdida+Ejemplo" alt="[Gráfico de Función de Pérdida Ejemplo]" class="mx-auto my-4 rounded shadow-md">
+                `
+            },
+            {
+                title: "3. Descenso del Gradiente",
+                content: `
+                    <h3>3. Optimización: El Descenso del Gradiente</h3>
+                    <p>El <strong class='text-blue-600'>descenso del gradiente</strong> es el algoritmo de optimización más común para entrenar redes neuronales. Su objetivo es encontrar los valores de los pesos y sesgos que minimizan la función de pérdida.</p>
+                    <p>Imagina la función de pérdida como un paisaje montañoso. El descenso del gradiente intenta encontrar el valle más profundo (el mínimo de la función). Lo hace calculando el <strong class='text-blue-600'>gradiente</strong> (la dirección de mayor inclinación) de la función de pérdida con respecto a cada parámetro (peso o sesgo) y luego dando un pequeño paso en la dirección opuesta.</p>
+                    <p>La <strong class='text-blue-600'>tasa de aprendizaje ($\eta$)</strong> controla el tamaño de estos pasos. Una tasa muy alta puede hacer que el algoritmo sobrepase el mínimo, mientras que una muy baja puede hacer que el aprendizaje sea demasiado lento.</p>
+                    <div class="math-formula">Actualización de un peso $w$: $w_{nuevo} = w_{viejo} - \\eta \\frac{\\partial L}{\\partial w}$</div>
+                    <p>La clave es cómo calcular eficientemente estas derivadas parciales $\\frac{\\partial L}{\\partial w}$ para todos los pesos en una red compleja. Aquí es donde entra la retropropagación.</p>
+                    <img src="https://placehold.co/600x250/e2e8f0/4a5568?text=Visualización+Descenso+de+Gradiente" alt="[Visualización Descenso de Gradiente]" class="mx-auto my-4 rounded shadow-md">
+                `
+            },
+            {
+                title: "4. Regla de la Cadena",
+                content: `
+                    <h3>4. La Regla de la Cadena: La Base Matemática</h3>
+                    <p>Las redes neuronales son esencialmente funciones compuestas muy grandes. La salida de una neurona es la entrada de otra, y la función de pérdida depende de la salida final de la red. Para calcular cómo un cambio en un peso en una capa temprana afecta la pérdida final, necesitamos la <strong class='text-blue-600'>regla de la cadena</strong> del cálculo diferencial.</p>
+                    <p>La regla de la cadena nos dice cómo calcular la derivada de una función compuesta. Si tenemos $y = f(u)$ y $u = g(x)$, entonces la derivada de $y$ con respecto a $x$ es:</p>
+                    <div class="math-formula">$\\frac{dy}{dx} = \\frac{dy}{du} \\cdot \\frac{du}{dx}$</div>
+                    <p>En una red neuronal, la pérdida $L$ es una función de las activaciones de la capa de salida, que son funciones de las sumas ponderadas, que a su vez son funciones de las activaciones de capas anteriores y los pesos. La retropropagación aplica sistemáticamente la regla de la cadena para calcular el gradiente de la pérdida con respecto a cada peso y sesgo en la red, comenzando desde la capa de salida y propagándose hacia atrás.</p>
+                `
+            },
+            {
+                title: "5. Forward Propagation",
+                content: `
+                    <h3>5. Paso hacia Adelante (Forward Propagation)</h3>
+                    <p>Antes de poder retropropagar el error, la información debe fluir hacia adelante a través de la red. Este proceso se llama <strong class='text-blue-600'>paso hacia adelante</strong> o <strong class='text-blue-600'>forward propagation</strong>.</p>
+                    <ol class="list-decimal list-inside ml-4">
+                        <li>Se presentan los datos de entrada ($x$) a la primera capa de la red.</li>
+                        <li>Para cada capa, desde la primera hasta la última:
+                            <ul class="list-disc list-inside ml-4">
+                                <li>Se calcula la suma ponderada ($z^l$) para cada neurona en la capa $l$: $z^l = W^l a^{l-1} + b^l$. Aquí, $a^{l-1}$ es la activación de la capa anterior (o la entrada $x$ para la primera capa), $W^l$ es la matriz de pesos de la capa $l$, y $b^l$ es el vector de sesgos.</li>
+                                <li>Se aplica la función de activación ($\sigma$) a $z^l$ para obtener la activación de la capa $a^l$: $a^l = \sigma(z^l)$.</li>
+                            </ul>
+                        </li>
+                        <li>La activación de la última capa, $a^L$, es la predicción de la red ($y_{pred}$).</li>
+                    </ol>
+                    <p>Durante el forward pass, es crucial almacenar los valores intermedios, especialmente las sumas ponderadas $z^l$ y las activaciones $a^l$ de cada capa, ya que se necesitarán para los cálculos en el backward pass.</p>
+                    <img src="https://placehold.co/600x150/e2e8f0/4a5568?text=Diagrama+de+Forward+Propagation" alt="[Diagrama de Forward Propagation]" class="mx-auto my-4 rounded shadow-md">
+                `
+            },
+            {
+                title: "6. Backward Pass: Capa Salida",
+                content: `
+                    <h3>6. Paso hacia Atrás (Backward Propagation): Error en la Capa de Salida</h3>
+                    <p>Una vez que tenemos la predicción ($a^L$) y la comparamos con el valor real ($y_{true}$) usando la función de pérdida $L$, comienza el <strong class='text-blue-600'>paso hacia atrás</strong>.</p>
+                    <p>El primer paso es calcular cómo la pérdida cambia con respecto a la activación de la capa de salida y con respecto a la suma ponderada $z^L$ de la capa de salida. Definimos el "error" de la capa de salida $\delta^L$ como:</p>
+                    <div class="math-formula">$\\delta^L = \\frac{\\partial L}{\\partial a^L} \\odot \\sigma'(z^L)$</div>
+                    <p>Donde $\\odot$ representa la multiplicación elemento a elemento (producto Hadamard), y $\\sigma'(z^L)$ es la derivada de la función de activación evaluada en $z^L$.</p>
+                    <p>Por ejemplo, si usamos MSE ($L = \\frac{1}{2}(a^L - y_{true})^2$) y la función de activación sigmoide ($\sigma(z)$), entonces $\\frac{\\partial L}{\\partial a^L} = (a^L - y_{true})$.</p>
+                    <p>Con $\delta^L$, podemos calcular los gradientes de la pérdida con respecto a los pesos ($W^L$) y sesgos ($b^L$) de la capa de salida:</p>
+                    <div class="math-formula">$\\frac{\\partial L}{\\partial W^L_{jk}} = a^{L-1}_k \\delta^L_j$</div>
+                    <div class="math-formula">$\\frac{\\partial L}{\\partial b^L_j} = \\delta^L_j$</div>
+                    <p>En forma vectorial/matricial:</p>
+                    <div class="math-formula">$\\frac{\\partial L}{\\partial W^L} = \\delta^L (a^{L-1})^T$</div>
+                    <div class="math-formula">$\\frac{\\partial L}{\\partial b^L} = \\delta^L$</div>
+                `
+            },
+            {
+                title: "7. Backward Pass: Capas Ocultas",
+                content: `
+                    <h3>7. Paso hacia Atrás: Propagación del Error a Capas Ocultas</h3>
+                    <p>Una vez que tenemos el error $\delta^L$ de la capa de salida, podemos propagarlo hacia atrás para calcular el error $\delta^l$ para cada capa oculta $l$ (desde $L-1$ hasta la primera capa oculta).</p>
+                    <p>El error $\delta^l$ para una capa oculta $l$ se calcula en función del error de la siguiente capa $\delta^{l+1}$ y los pesos $W^{l+1}$ que conectan la capa $l$ con la capa $l+1$:</p>
+                    <div class="math-formula">$\\delta^l = ((W^{l+1})^T \\delta^{l+1}) \\odot \\sigma'(z^l)$</div>
+                    <p>Aquí, $(W^{l+1})^T$ es la transpuesta de la matriz de pesos de la capa $l+1$. Esta ecuación muestra cómo el error se "propaga" hacia atrás a través de los pesos de la red.</p>
+                    <p>Una vez que tenemos $\delta^l$ para una capa oculta, podemos calcular los gradientes de la pérdida con respecto a los pesos $W^l$ y sesgos $b^l$ de esa capa, de manera similar a como lo hicimos para la capa de salida:</p>
+                    <div class="math-formula">$\\frac{\\partial L}{\\partial W^l} = \\delta^l (a^{l-1})^T$</div>
+                    <div class="math-formula">$\\frac{\\partial L}{\\partial b^l} = \\delta^l$</div>
+                    <p>Este proceso se repite para cada capa, moviéndose desde la capa $L-1$ hacia la primera capa de la red.</p>
+                    <img src="https://placehold.co/600x200/e2e8f0/4a5568?text=Diagrama+Backward+Pass+en+Capas+Ocultas" alt="[Diagrama Backward Pass en Capas Ocultas]" class="mx-auto my-4 rounded shadow-md">
+                `
+            },
+            {
+                title: "8. Actualización de Pesos",
+                content: `
+                    <h3>8. Actualización de Pesos y Sesgos</h3>
+                    <p>Después de completar el paso hacia atrás (backward pass), hemos calculado los gradientes de la función de pérdida con respecto a todos los pesos ($W^l$) y sesgos ($b^l$) en la red.</p>
+                    <p>El siguiente paso es actualizar estos parámetros utilizando la regla del descenso del gradiente:</p>
+                    <div class="math-formula">$W^l_{nuevo} = W^l_{viejo} - \\eta \\frac{\\partial L}{\\partial W^l}$</div>
+                    <div class="math-formula">$b^l_{nuevo} = b^l_{viejo} - \\eta \\frac{\\partial L}{\\partial b^l}$</div>
+                    <p>Donde $\eta$ es la tasa de aprendizaje. Esta actualización se realiza para todos los pesos y sesgos en todas las capas.</p>
+                    <p>Todo el proceso (paso hacia adelante, cálculo de la pérdida, paso hacia atrás y actualización de pesos) constituye una <strong class='text-blue-600'>iteración</strong> de entrenamiento. Normalmente, se realizan muchas iteraciones sobre el conjunto de datos de entrenamiento. Una pasada completa por todo el conjunto de datos de entrenamiento se llama una <strong class='text-blue-600'>época</strong>.</p>
+                `
+            },
+            {
+                title: "9. Ejemplo Simplificado",
+                content: `
+                    <h3>9. Ejemplo Práctico Simplificado (Paso a Paso)</h3>
+                    <p>Consideremos una red muy simple: 1 entrada $x$, 1 neurona en una capa oculta con activación $\sigma_h$, y 1 neurona de salida con activación $\sigma_o$.</p>
+                    <p>Entrada: $x$</p>
+                    <p>Capa Oculta:</p>
+                    <ul class='list-disc list-inside ml-4'>
+                        <li>Peso $w_1$, sesgo $b_1$</li>
+                        <li>Suma ponderada: $z_h = w_1 x + b_1$</li>
+                        <li>Activación: $a_h = \sigma_h(z_h)$</li>
+                    </ul>
+                    <p>Capa de Salida:</p>
+                    <ul class='list-disc list-inside ml-4'>
+                        <li>Peso $w_2$, sesgo $b_2$</li>
+                        <li>Suma ponderada: $z_o = w_2 a_h + b_2$</li>
+                        <li>Activación (predicción): $a_o = \hat{y} = \sigma_o(z_o)$</li>
+                    </ul>
+                    <p>Función de Pérdida (ej. MSE): $L = \\frac{1}{2} (y_{true} - \hat{y})^2$</p>
+                    <p><strong class='text-gray-700'>Paso hacia Adelante:</strong> Calcular $z_h, a_h, z_o, \hat{y}$.</p>
+                    <p><strong class='text-gray-700'>Paso hacia Atrás:</strong></p>
+                    <ol class='list-decimal list-inside ml-4'>
+                        <li>Error en la salida: $\delta_o = (a_o - y_{true}) \sigma_o'(z_o)$</li>
+                        <li>Gradientes para $w_2, b_2$:
+                            <div class="math-formula">$\\frac{\\partial L}{\\partial w_2} = \delta_o a_h$</div>
+                            <div class="math-formula">$\\frac{\\partial L}{\\partial b_2} = \delta_o$</div>
+                        </li>
+                        <li>Error en la capa oculta: $\delta_h = (\delta_o w_2) \sigma_h'(z_h)$</li>
+                        <li>Gradientes para $w_1, b_1$:
+                            <div class="math-formula">$\\frac{\\partial L}{\\partial w_1} = \delta_h x$</div>
+                            <div class="math-formula">$\\frac{\\partial L}{\\partial b_1} = \delta_h$</div>
+                        </li>
+                    </ol>
+                    <p><strong class='text-gray-700'>Actualización:</strong></p>
+                    <div class="math-formula">$w_1 \\leftarrow w_1 - \\eta \\frac{\\partial L}{\\partial w_1}$</div>
+                    <div class="math-formula">$b_1 \\leftarrow b_1 - \\eta \\frac{\\partial L}{\\partial b_1}$</div>
+                    <div class="math-formula">$w_2 \\leftarrow w_2 - \\eta \\frac{\\partial L}{\\partial w_2}$</div>
+                    <div class="math-formula">$b_2 \\leftarrow b_2 - \\eta \\frac{\\partial L}{\\partial b_2}$</div>
+                    <p>Este ejemplo, aunque simple, ilustra cómo la regla de la cadena se aplica para obtener todos los gradientes necesarios.</p>
+                `
+            },
+            {
+                title: "10. Consideraciones",
+                content: `
+                    <h3>10. Consideraciones y Mejoras</h3>
+                    <p>Si bien la retropropagación es poderosa, existen desafíos y mejoras:</p>
+                    <ul class='list-disc list-inside ml-4'>
+                        <li><strong class='text-gray-700'>Desvanecimiento/Explosión de Gradientes:</strong> En redes profundas, los gradientes pueden volverse extremadamente pequeños o grandes. Soluciones: ReLU, inicialización de pesos (Xavier/He), ResNet.</li>
+                        <li><strong class='text-gray-700'>Mínimos Locales:</strong> El descenso del gradiente puede quedar atrapado. En la práctica, para redes grandes, suele ser menos problemático.</li>
+                        <li><strong class='text-gray-700'>Tasa de Aprendizaje:</strong> Elegir una buena $\eta$ es crucial. Se usan calendarios de tasa de aprendizaje o tasas adaptativas.</li>
+                        <li><strong class='text-gray-700'>Optimizadores Avanzados:</strong> Más allá del SGD estándar:
+                            <ul class='list-disc list-inside ml-6'>
+                                <li>SGD con Momentum</li>
+                                <li>AdaGrad</li>
+                                <li>RMSProp</li>
+                                <li>Adam (Adaptive Moment Estimation) - muy popular.</li>
+                            </ul>
+                        </li>
+                        <li><strong class='text-gray-700'>Regularización:</strong> Técnicas como L1/L2 o Dropout para prevenir sobreajuste (overfitting).</li>
+                        <li><strong class='text-gray-700'>Normalización por Lotes (Batch Normalization):</strong> Ayuda a estabilizar y acelerar el entrenamiento.</li>
+                    </ul>
+                    <p>La investigación en la optimización de redes neuronales es un campo activo.</p>
+                `
+            }
+        ];
+
+        const tabsContainer = document.getElementById('tabs-container');
+        const tabContentContainer = document.getElementById('tab-content-container');
+
+        if (tabsContainer && tabContentContainer) {
+            subtopicsData.forEach((topic, index) => {
+                const tabButton = document.createElement('button');
+                tabButton.classList.add('tab-button');
+                if (index === 0) tabButton.classList.add('active');
+                tabButton.textContent = topic.title;
+                tabButton.setAttribute('data-tab', `tab-${index}`);
+                tabsContainer.appendChild(tabButton);
+
+                const tabContent = document.createElement('div');
+                tabContent.classList.add('tab-content');
+                if (index === 0) tabContent.classList.add('active');
+                tabContent.id = `tab-${index}`;
+                tabContent.innerHTML = topic.content;
+                tabContentContainer.appendChild(tabContent);
+
+                tabButton.addEventListener('click', () => {
+                    tabsContainer.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                    tabContentContainer.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    tabButton.classList.add('active');
+                    tabContent.classList.add('active');
+                    
+                    if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+                        MathJax.typesetPromise([tabContent]).catch((err) => console.error('MathJax typesetting error on tab click:', err));
+                    }
+                });
+            });
+        }
+
+        // --- Clase Base para Ejemplos Interactivos ---
+        class InteractiveExample {
+            constructor(idPrefix, svgId) {
+                this.idPrefix = idPrefix;
+                this.svg = document.getElementById(svgId);
+                if (!this.svg) {
+                    console.error(`SVG element with ID ${svgId} not found for ${idPrefix}.`);
+                    return; // Early exit if SVG is not found
+                }
+                this.svgWidth = parseInt(this.svg.getAttribute('width')) || 400; // Default width
+                this.svgHeight = parseInt(this.svg.getAttribute('height')) || 400; // Default height
+
+                this.animationFrameId = null;
+                this.isPaused = true;
+                this.iterationCount = 0;
+                this.lastFrameTime = 0;
+
+                // Bind the loop method to this instance to maintain context in requestAnimationFrame
+                this._loop = this._loop.bind(this);
+            }
+
+            // Method to create SVG elements, useful for subclasses
+            _createSvgElement(tag, attributes) {
+                const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+                for (const key in attributes) {
+                    el.setAttribute(key, attributes[key]);
+                }
+                return el;
+            }
+
+            // Core animation loop
+            _loop() {
+                this.animationFrameId = requestAnimationFrame(this._loop);
+                const now = performance.now();
+                const elapsed = now - this.lastFrameTime;
+
+                if (elapsed > GlobalAnimSettings.fpsInterval) {
+                    this.lastFrameTime = now - (elapsed % GlobalAnimSettings.fpsInterval);
+                    if (!this.isPaused) {
+                        this.step(); // Perform simulation logic
+                        this.draw(); // Update visualization
+                    }
+                }
+            }
+
+            // Public methods for controlling the simulation
+            start() {
+                if (this.isPaused) {
+                    this.isPaused = false;
+                    this.lastFrameTime = performance.now(); // Reset time for smooth start
+                    if (!this.animationFrameId) this._loop(); // Start loop if not already running
+                    showMessage(`Simulación ${this.idPrefix.toUpperCase()} iniciada.`);
+                }
+            }
+
+            pause() {
+                this.isPaused = true;
+                showMessage(`Simulación ${this.idPrefix.toUpperCase()} pausada.`);
+            }
+            
+            // Abstract methods to be implemented by subclasses
+            initDOMAndListeners() { throw new Error("Method 'initDOMAndListeners()' must be implemented."); }
+            reset() { throw new Error("Method 'reset()' must be implemented."); }
+            step() { throw new Error("Method 'step()' must be implemented."); }
+            draw() { throw new Error("Method 'draw()' must be implemented."); }
+        }
+
+        // --- Ejemplo 1: Regresión Lineal 1D ---
+        class LinearRegressionExample extends InteractiveExample {
+            constructor() {
+                super('ex1', 'example-svg-ex1');
+                this.padding = 50; 
+                this.maxXData = 10; 
+                this.maxYData = 30; 
+                this.dataPoints = [];
+                this.m = 0; 
+                this.c = 0; 
+                this.learningRate = 0.005;
+                this.initDOMAndListeners();
+                this.reset();
+            }
+
+            initDOMAndListeners() {
+                this.iterationCountDisplay = document.getElementById('iterationCount_ex1');
+                this.errorValueDisplay = document.getElementById('errorValue_ex1');
+                this.slopeValueDisplay = document.getElementById('slopeValue_ex1');
+                this.interceptValueDisplay = document.getElementById('interceptValue_ex1');
+                this.learningRateInput = document.getElementById('learningRate_ex1_input');
+
+                document.getElementById('startButton_ex1').addEventListener('click', () => this.start());
+                document.getElementById('pauseButton_ex1').addEventListener('click', () => this.pause());
+                document.getElementById('resetButton_ex1').addEventListener('click', () => this.reset());
+                document.getElementById('stepButton_ex1').addEventListener('click', () => {
+                    this.pause(); this.step(); this.draw(); showMessage("Un paso Ejemplo 1 realizado.");
+                });
+                this.learningRateInput.addEventListener('change', (event) => {
+                    const newLr = parseFloat(event.target.value);
+                    if (!isNaN(newLr) && newLr > 0.00001 && newLr <= 0.1 ) { 
+                        this.learningRate = newLr;
+                        showMessage(`Tasa de aprendizaje Ejemplo 1 actualizada a ${this.learningRate}.`);
+                    } else {
+                        event.target.value = this.learningRate; 
+                        showMessage("Tasa de aprendizaje Inválida. Use valor entre 0.0001 y 0.1.", 3000);
+                    }
+                });
+            }
+            
+            mapXToSVG(dataX) { return this.padding + (dataX / this.maxXData) * (this.svgWidth - 2 * this.padding); }
+            mapYToSVG(dataY) { return (this.svgHeight - this.padding) - (dataY / this.maxYData) * (this.svgHeight - 2 * this.padding); }
+
+            generateData() {
+                this.dataPoints = [];
+                const trueSlope = 2; const trueIntercept = 5;
+                for (let i = 0; i < 30; i++) {
+                    const x = Math.random() * this.maxXData; 
+                    const y_ideal = trueSlope * x + trueIntercept;
+                    const noise = (Math.random() - 0.5) * (0.3 * this.maxYData); 
+                    let y = y_ideal + noise;
+                    y = Math.max(0, Math.min(this.maxYData, y)); 
+                    this.dataPoints.push({ x: x, y: y });
+                }
+            }
+
+            reset() {
+                this.pause();
+                this.m = Math.random() * 4 - 2; 
+                this.c = Math.random() * (this.maxYData * 0.5); 
+                this.iterationCount = 0;
+                const lrValue = parseFloat(this.learningRateInput.value);
+                this.learningRate = (!isNaN(lrValue) && lrValue > 0 && lrValue <= 0.1) ? lrValue : 0.005;
+                this.learningRateInput.value = this.learningRate;
+                this.generateData(); 
+                this.draw();
+                if(this.errorValueDisplay) this.errorValueDisplay.textContent = "N/A";
+                showMessage("Simulación Ejemplo 1 reiniciada.");
+            }
+
+            step() {
+                if (this.dataPoints.length === 0) return;
+                let sumErrorX = 0; let sumError = 0;
+                const N = this.dataPoints.length;
+                this.dataPoints.forEach(point => {
+                    const predictedY = this.m * point.x + this.c;
+                    const error = predictedY - point.y; 
+                    sumErrorX += point.x * error;
+                    sumError += error;
+                });
+                this.m -= this.learningRate * (2/N) * sumErrorX;
+                this.c -= this.learningRate * (2/N) * sumError;
+                this.iterationCount++;
+            }
+
+            draw() {
+                if (!this.svg) return;
+                this.svg.innerHTML = ''; 
+                const ns = "http://www.w3.org/2000/svg";
+
+                this.svg.appendChild(this._createSvgElement('line', {x1:this.mapXToSVG(0), y1:this.mapYToSVG(0), x2:this.mapXToSVG(this.maxXData), y2:this.mapYToSVG(0), stroke:'#aaa'}));
+                this.svg.appendChild(this._createSvgElement('line', {x1:this.mapXToSVG(0), y1:this.mapYToSVG(0), x2:this.mapXToSVG(0), y2:this.mapYToSVG(this.maxYData), stroke:'#aaa'}));
+
+                this.dataPoints.forEach(point => {
+                    this.svg.appendChild(this._createSvgElement('circle', {cx:this.mapXToSVG(point.x), cy:this.mapYToSVG(point.y), r:4, fill:'#007bff'}));
+                });
+
+                let y_start_data = this.m * 0 + this.c; 
+                let y_end_data = this.m * this.maxXData + this.c; 
+                this.svg.appendChild(this._createSvgElement('line', {x1:this.mapXToSVG(0), y1:this.mapYToSVG(y_start_data), x2:this.mapXToSVG(this.maxXData), y2:this.mapYToSVG(y_end_data), stroke:'red', 'stroke-width':2}));
+
+                this.iterationCountDisplay.textContent = this.iterationCount;
+                this.slopeValueDisplay.textContent = this.m.toFixed(3);
+                this.interceptValueDisplay.textContent = this.c.toFixed(3);
+                
+                let totalError = 0;
+                if (this.dataPoints.length > 0) {
+                    this.dataPoints.forEach(point => {
+                        const predictedY = this.m * point.x + this.c;
+                        totalError += Math.pow(point.y - predictedY, 2);
+                    });
+                    this.errorValueDisplay.textContent = (totalError / this.dataPoints.length).toFixed(3);
+                } else {
+                    this.errorValueDisplay.textContent = "N/A";
+                }
+            }
+        }
+
+        // --- Ejemplo 2: Neurona Simple 1D ---
+        class SimpleNeuronExample extends InteractiveExample {
+            constructor() {
+                super('ex2', 'example-svg-ex2');
+                this.inputX = 0.5; this.targetY = 0.8;
+                this.weightW = 0.1; this.biasB = 0.1;
+                this.learningRate = 0.1;
+                this.z = 0; this.outputY = 0;
+                this.initDOMAndListeners();
+                this.reset();
+            }
+
+            initDOMAndListeners() {
+                this.inputX_input = document.getElementById('inputX_ex2_input');
+                this.targetY_input = document.getElementById('targetY_ex2_input');
+                this.learningRateInput = document.getElementById('learningRate_ex2_input');
+                this.iterationCountDisplay = document.getElementById('iterationCount_ex2');
+                this.weightWDisplay = document.getElementById('weightW_ex2');
+                this.biasBDisplay = document.getElementById('biasB_ex2');
+                this.zDisplay = document.getElementById('z_ex2');
+                this.outputYDisplay = document.getElementById('outputY_ex2');
+                this.errorValueDisplay = document.getElementById('errorValue_ex2');
+
+                document.getElementById('startButton_ex2').addEventListener('click', () => this.start());
+                document.getElementById('pauseButton_ex2').addEventListener('click', () => this.pause());
+                document.getElementById('resetButton_ex2').addEventListener('click', () => this.reset());
+                document.getElementById('stepButton_ex2').addEventListener('click', () => {
+                    this.pause(); this.step(); this.draw(); showMessage("Un paso Ejemplo 2 realizado.");
+                });
+
+                this.inputX_input.addEventListener('change', () => this.reset());
+                this.targetY_input.addEventListener('change', () => this.reset());
+                this.learningRateInput.addEventListener('change', (e) => {
+                    this.learningRate = parseFloat(e.target.value) || 0.1;
+                    showMessage(`Tasa de aprendizaje Ejemplo 2 actualizada a ${this.learningRate}.`);
+                });
+            }
+
+            _sigmoid(z) { return 1 / (1 + Math.exp(-z)); }
+            _sigmoidDerivative(z) { const s = this._sigmoid(z); return s * (1 - s); }
+
+            _forwardPass() {
+                this.z = this.weightW * this.inputX + this.biasB;
+                this.outputY = this._sigmoid(this.z);
+            }
+            
+            reset() {
+                this.pause();
+                this.inputX = parseFloat(this.inputX_input.value) || 0.5;
+                this.targetY = parseFloat(this.targetY_input.value) || 0.8;
+                this.learningRate = parseFloat(this.learningRateInput.value) || 0.1;
+                this.weightW = Math.random() * 0.2 - 0.1; 
+                this.biasB = Math.random() * 0.2 - 0.1;   
+                this.iterationCount = 0;
+                this._forwardPass(); 
+                this.draw();
+                if(this.errorValueDisplay) this.errorValueDisplay.textContent = "N/A";
+                showMessage("Simulación Ejemplo 2 reiniciada.");
+            }
+
+            step() {
+                this._forwardPass();
+                const error = this.outputY - this.targetY; 
+                const dL_dOutputY = error; 
+                const dOutputY_dZ = this._sigmoidDerivative(this.z);
+                const dZ_dW = this.inputX;
+                const dZ_dB = 1;
+
+                const gradientW = dL_dOutputY * dOutputY_dZ * dZ_dW;
+                const gradientB = dL_dOutputY * dOutputY_dZ * dZ_dB;
+                
+                this.weightW -= this.learningRate * gradientW;
+                this.biasB -= this.learningRate * gradientB;
+                this.iterationCount++;
+            }
+
+            draw() {
+                if (!this.svg) return;
+                this.svg.innerHTML = '';
+                const textStyle = "font-family: 'Inter', sans-serif; font-size: 14px;";
+                const neuronRadius = 30;
+                const startX = 50, neuronX = 200, outputX = 400, targetX = 550;
+                const commonY = this.svgHeight / 2;
+
+                let textEl = this._createSvgElement('text', {x:startX, y:commonY - 30, style:textStyle});
+                textEl.textContent = `Input x: ${this.inputX.toFixed(2)}`; this.svg.appendChild(textEl);
+                this.svg.appendChild(this._createSvgElement('line', {x1:startX+40, y1:commonY, x2:neuronX-neuronRadius, y2:commonY, stroke:'#555', 'stroke-width':2}));
+                this.svg.appendChild(this._createSvgElement('circle', {cx:neuronX, cy:commonY, r:neuronRadius, fill:'#a0c4ff', stroke:'#007bff'}));
+                
+                textEl = this._createSvgElement('text', {x:neuronX, y:commonY-5, 'text-anchor':'middle', style:textStyle + "font-size:12px;"});
+                textEl.textContent = `w:${this.weightW.toFixed(2)}`; this.svg.appendChild(textEl);
+                textEl = this._createSvgElement('text', {x:neuronX, y:commonY+15, 'text-anchor':'middle', style:textStyle + "font-size:12px;"});
+                textEl.textContent = `b:${this.biasB.toFixed(2)}`; this.svg.appendChild(textEl);
+                
+                this.svg.appendChild(this._createSvgElement('line', {x1:neuronX+neuronRadius, y1:commonY, x2:outputX-10, y2:commonY, stroke:'#555', 'stroke-width':2}));
+                textEl = this._createSvgElement('text', {x:outputX, y:commonY-15, style:textStyle});
+                textEl.textContent = `Output ŷ: ${this.outputY.toFixed(3)}`; this.svg.appendChild(textEl);
+                textEl = this._createSvgElement('text', {x:outputX, y:commonY+15, style:textStyle + "font-size:12px;"});
+                textEl.textContent = `(z: ${this.z.toFixed(2)})`; this.svg.appendChild(textEl);
+                textEl = this._createSvgElement('text', {x:targetX-30, y:commonY-15, style:textStyle + "fill: green;"});
+                textEl.textContent = `Target: ${this.targetY.toFixed(2)}`; this.svg.appendChild(textEl);
+
+                const mse = 0.5 * Math.pow(this.outputY - this.targetY, 2);
+                this.errorValueDisplay.textContent = mse.toFixed(4);
+                this.iterationCountDisplay.textContent = this.iterationCount;
+                this.weightWDisplay.textContent = this.weightW.toFixed(3);
+                this.biasBDisplay.textContent = this.biasB.toFixed(3);
+                this.zDisplay.textContent = this.z.toFixed(3);
+                this.outputYDisplay.textContent = this.outputY.toFixed(3);
+            }
+        }
+
+        // --- Ejemplo 3: Descenso de Gradiente 2D ---
+        class GradientDescent2DExample extends InteractiveExample {
+            constructor() {
+                super('ex3', 'example-svg-ex3');
+                this.padding = 40; this.dataRange = 5;
+                this.currentX = 4; this.currentY = 4;
+                this.startX = 4; this.startY = 4;
+                this.learningRate = 0.1;
+                this.pathHistory = [];
+                this.initDOMAndListeners();
+                this.reset();
+            }
+
+            initDOMAndListeners() {
+                this.startX_input = document.getElementById('startX_ex3_input');
+                this.startY_input = document.getElementById('startY_ex3_input');
+                this.learningRateInput = document.getElementById('learningRate_ex3_input');
+                this.iterationCountDisplay = document.getElementById('iterationCount_ex3');
+                this.currentXDisplay = document.getElementById('currentX_ex3');
+                this.currentYDisplay = document.getElementById('currentY_ex3');
+                this.costValueDisplay = document.getElementById('costValue_ex3');
+
+                document.getElementById('startButton_ex3').addEventListener('click', () => this.start());
+                document.getElementById('pauseButton_ex3').addEventListener('click', () => this.pause());
+                document.getElementById('resetButton_ex3').addEventListener('click', () => this.reset());
+                document.getElementById('stepButton_ex3').addEventListener('click', () => {
+                    this.pause(); this.step(); this.draw(); showMessage("Un paso Ejemplo 3 realizado.");
+                });
+                this.startX_input.addEventListener('change', () => this.reset());
+                this.startY_input.addEventListener('change', () => this.reset());
+                this.learningRateInput.addEventListener('change', (e) => {
+                    this.learningRate = parseFloat(e.target.value) || 0.1;
+                    showMessage(`Tasa de aprendizaje Ejemplo 3 actualizada a ${this.learningRate}.`);
+                });
+            }
+
+            _mapToSVG(dataVal) { return this.padding + ((dataVal + this.dataRange) / (2 * this.dataRange)) * (this.svgWidth - 2 * this.padding); }
+            _costFunction(x, y) { return x*x + y*y; }
+            _gradX(x) { return 2*x; }
+            _gradY(y) { return 2*y; }
+
+            reset() {
+                this.pause();
+                this.startX = parseFloat(this.startX_input.value) || 4;
+                this.startY = parseFloat(this.startY_input.value) || 4;
+                this.learningRate = parseFloat(this.learningRateInput.value) || 0.1;
+                this.currentX = this.startX; this.currentY = this.startY;
+                this.iterationCount = 0;
+                this.pathHistory = [{x: this.currentX, y: this.currentY}];
+                this.draw();
+                if(this.costValueDisplay) this.costValueDisplay.textContent = this._costFunction(this.currentX, this.currentY).toFixed(3);
+                showMessage("Simulación Ejemplo 3 reiniciada.");
+            }
+
+            step() {
+                const gx = this._gradX(this.currentX);
+                const gy = this._gradY(this.currentY);
+                this.currentX -= this.learningRate * gx;
+                this.currentY -= this.learningRate * gy;
+                this.pathHistory.push({x: this.currentX, y: this.currentY});
+                if (this.pathHistory.length > 200) this.pathHistory.shift();
+                this.iterationCount++;
+            }
+
+            draw() {
+                if (!this.svg) return;
+                this.svg.innerHTML = '';
+                for (let r = 0.5; r <= this.dataRange * 1.2 ; r += 0.8) {
+                    const radiusSVG = r * (this.svgWidth - 2 * this.padding) / (2 * this.dataRange);
+                    this.svg.appendChild(this._createSvgElement('circle', {cx:this._mapToSVG(0), cy:this._mapToSVG(0), r:radiusSVG, stroke:'#d1d5db', 'stroke-dasharray':'4 2', fill:'none'}));
+                }
+                this.svg.appendChild(this._createSvgElement('line', {x1:this._mapToSVG(-this.dataRange), y1:this._mapToSVG(0), x2:this._mapToSVG(this.dataRange), y2:this._mapToSVG(0), stroke:'#9ca3af'}));
+                this.svg.appendChild(this._createSvgElement('line', {x1:this._mapToSVG(0), y1:this._mapToSVG(-this.dataRange), x2:this._mapToSVG(0), y2:this._mapToSVG(this.dataRange), stroke:'#9ca3af'}));
+
+                if (this.pathHistory.length > 1) {
+                    let pointsStr = this.pathHistory.map(p => `${this._mapToSVG(p.x)},${this._mapToSVG(p.y)}`).join(" ");
+                    this.svg.appendChild(this._createSvgElement('polyline', {points:pointsStr.trim(), stroke:"#fbbf24", 'stroke-width':"1.5", fill:"none"}));
+                }
+                this.svg.appendChild(this._createSvgElement('circle', {cx:this._mapToSVG(this.currentX), cy:this._mapToSVG(this.currentY), r:5, fill:'#ef4444'}));
+
+                this.iterationCountDisplay.textContent = this.iterationCount;
+                this.currentXDisplay.textContent = this.currentX.toFixed(3);
+                this.currentYDisplay.textContent = this.currentY.toFixed(3);
+                this.costValueDisplay.textContent = this._costFunction(this.currentX, this.currentY).toFixed(3);
+            }
+        }
+        
+        // --- Ejemplo 4: Clasificador Lineal (Perceptrón) ---
+        class PerceptronExample extends InteractiveExample {
+            constructor() {
+                super('ex4', 'example-svg-ex4');
+                this.padding = 40;
+                this.dataRange = 5; // Data x, y will be from -dataRange to +dataRange
+                this.dataPoints = []; // {x, y, type: -1 or 1}
+                this.wx = 0; // Weight for x
+                this.wy = 0; // Weight for y
+                this.b = 0;  // Bias
+                this.learningRate = 0.05;
+                this.initDOMAndListeners();
+                this.reset();
+            }
+
+            initDOMAndListeners() {
+                this.learningRateInput = document.getElementById('learningRate_ex4_input');
+                this.iterationCountDisplay = document.getElementById('iterationCount_ex4');
+                this.weightsWxDisplay = document.getElementById('weights_ex4_wx');
+                this.weightsWyDisplay = document.getElementById('weights_ex4_wy');
+                this.weightsBDisplay = document.getElementById('weights_ex4_b');
+                this.accuracyDisplay = document.getElementById('accuracy_ex4');
+
+                document.getElementById('generateData_ex4').addEventListener('click', () => {
+                    this.generateData(); // Generate new data
+                    this.resetWeightsAndBias(); // Reset weights, keep new data
+                    this.draw(); // Redraw with new data and reset line
+                    showMessage("Nuevos datos generados para Ejemplo 4.");
+                });
+                document.getElementById('startButton_ex4').addEventListener('click', () => this.start());
+                document.getElementById('pauseButton_ex4').addEventListener('click', () => this.pause());
+                document.getElementById('resetButton_ex4').addEventListener('click', () => this.reset()); // Full reset
+                document.getElementById('stepButton_ex4').addEventListener('click', () => {
+                    this.pause(); this.step(); this.draw(); showMessage("Un paso Ejemplo 4 realizado.");
+                });
+                this.learningRateInput.addEventListener('change', (event) => {
+                    const newLr = parseFloat(event.target.value);
+                    if (!isNaN(newLr) && newLr > 0.0001 && newLr <= 0.5 ) { 
+                        this.learningRate = newLr;
+                        showMessage(`Tasa de aprendizaje Ejemplo 4 actualizada a ${this.learningRate}.`);
+                    } else {
+                        event.target.value = this.learningRate; 
+                        showMessage("Tasa de aprendizaje Inválida. Use valor entre 0.001 y 0.5.", 3000);
+                    }
+                });
+            }
+
+            _mapToSVG(dataVal) { 
+                return this.padding + ((dataVal + this.dataRange) / (2 * this.dataRange)) * (this.svgWidth - 2 * this.padding);
+            }
+
+            generateData(numPointsPerClass = 25) {
+                this.dataPoints = [];
+                // Generate two somewhat separable clusters
+                const offset = this.dataRange / 3;
+                // Class 1 (-1)
+                for (let i = 0; i < numPointsPerClass; i++) {
+                    this.dataPoints.push({
+                        x: (Math.random() * this.dataRange * 0.8) - this.dataRange * 0.4 - offset,
+                        y: (Math.random() * this.dataRange * 0.8) - this.dataRange * 0.4 - offset,
+                        type: -1
+                    });
+                }
+                // Class 2 (+1)
+                for (let i = 0; i < numPointsPerClass; i++) {
+                    this.dataPoints.push({
+                        x: (Math.random() * this.dataRange * 0.8) - this.dataRange * 0.4 + offset,
+                        y: (Math.random() * this.dataRange * 0.8) - this.dataRange * 0.4 + offset,
+                        type: 1
+                    });
+                }
+                 // Shuffle data
+                for (let i = this.dataPoints.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [this.dataPoints[i], this.dataPoints[j]] = [this.dataPoints[j], this.dataPoints[i]];
+                }
+            }
+            
+            resetWeightsAndBias() {
+                this.wx = Math.random() * 0.2 - 0.1; // Small random weights
+                this.wy = Math.random() * 0.2 - 0.1;
+                this.b = 0;
+                this.iterationCount = 0; // Reset iteration count when weights reset
+            }
+
+            reset() {
+                this.pause();
+                this.generateData();
+                this.resetWeightsAndBias();
+                const lrValue = parseFloat(this.learningRateInput.value);
+                this.learningRate = (!isNaN(lrValue) && lrValue > 0.0001 && lrValue <= 0.5) ? lrValue : 0.05;
+                this.learningRateInput.value = this.learningRate;
+                this.draw();
+                if(this.accuracyDisplay) this.accuracyDisplay.textContent = "N/A";
+                showMessage("Simulación Ejemplo 4 reiniciada.");
+            }
+            
+            _predict(x, y) {
+                const activation = this.wx * x + this.wy * y + this.b;
+                return activation >= 0 ? 1 : -1;
+            }
+
+            step() {
+                if (this.dataPoints.length === 0) return;
+                // Pick a random point to update on (stochastic perceptron)
+                const point = this.dataPoints[Math.floor(Math.random() * this.dataPoints.length)];
+                
+                const prediction = this._predict(point.x, point.y);
+                
+                if (prediction !== point.type) {
+                    this.wx += this.learningRate * point.type * point.x;
+                    this.wy += this.learningRate * point.type * point.y;
+                    this.b  += this.learningRate * point.type;
+                }
+                this.iterationCount++;
+            }
+
+            _calculateAccuracy() {
+                if (this.dataPoints.length === 0) return 0;
+                let correctCount = 0;
+                this.dataPoints.forEach(point => {
+                    if (this._predict(point.x, point.y) === point.type) {
+                        correctCount++;
+                    }
+                });
+                return (correctCount / this.dataPoints.length) * 100;
+            }
+
+            draw() {
+                if (!this.svg) return;
+                this.svg.innerHTML = '';
+
+                // Draw Axes
+                this.svg.appendChild(this._createSvgElement('line', {x1:this._mapToSVG(-this.dataRange), y1:this._mapToSVG(0), x2:this._mapToSVG(this.dataRange), y2:this._mapToSVG(0), stroke:'#ccc'}));
+                this.svg.appendChild(this._createSvgElement('line', {x1:this._mapToSVG(0), y1:this._mapToSVG(-this.dataRange), x2:this._mapToSVG(0), y2:this._mapToSVG(this.dataRange), stroke:'#ccc'}));
+
+                // Draw points
+                this.dataPoints.forEach(point => {
+                    this.svg.appendChild(this._createSvgElement('circle', {
+                        cx: this._mapToSVG(point.x), 
+                        cy: this._mapToSVG(point.y), 
+                        r: 4, 
+                        fill: point.type === 1 ? '#2563eb' : '#dc2626' // Blue for class 1, Red for class -1
+                    }));
+                });
+
+                // Draw decision boundary: wx * x + wy * y + b = 0
+                // If wy != 0, y = (-wx * x - b) / wy
+                // If wy == 0, x = -b / wx (vertical line)
+                let x1_svg, y1_svg, x2_svg, y2_svg;
+                const x_min_data = -this.dataRange;
+                const x_max_data = this.dataRange;
+
+                if (Math.abs(this.wy) > 1e-5) { // Non-vertical line
+                    let y1_data = (-this.wx * x_min_data - this.b) / this.wy;
+                    let y2_data = (-this.wx * x_max_data - this.b) / this.wy;
+                    x1_svg = this._mapToSVG(x_min_data);
+                    y1_svg = this._mapToSVG(y1_data);
+                    x2_svg = this._mapToSVG(x_max_data);
+                    y2_svg = this._mapToSVG(y2_data);
+                } else if (Math.abs(this.wx) > 1e-5) { // Vertical line
+                    let x_data = -this.b / this.wx;
+                    x1_svg = this._mapToSVG(x_data);
+                    y1_svg = this._mapToSVG(-this.dataRange); // Top of SVG plotting area
+                    x2_svg = this._mapToSVG(x_data);
+                    y2_svg = this._mapToSVG(this.dataRange);  // Bottom of SVG plotting area
+                } else { // Line is undefined (wx and wy are both near zero)
+                    // Don't draw the line
+                    x1_svg = x2_svg = y1_svg = y2_svg = 0; // effectively hide it
+                }
+                 if (x1_svg !== 0 || y1_svg !==0 ) { // only draw if line is defined
+                    this.svg.appendChild(this._createSvgElement('line', {
+                        x1: x1_svg, y1: y1_svg,
+                        x2: x2_svg, y2: y2_svg,
+                        stroke: '#34d399', 'stroke-width': 2 // Green line
+                    }));
+                 }
+
+
+                // Update displays
+                this.iterationCountDisplay.textContent = this.iterationCount;
+                this.weightsWxDisplay.textContent = this.wx.toFixed(2);
+                this.weightsWyDisplay.textContent = this.wy.toFixed(2);
+                this.weightsBDisplay.textContent = this.b.toFixed(2);
+                this.accuracyDisplay.textContent = this._calculateAccuracy().toFixed(1) + '%';
+            }
+        }
+
+
+        // --- Inicialización General ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const fpsInputCtrl = document.getElementById('fpsControl');
+            if (fpsInputCtrl) {
+                fpsInputCtrl.value = GlobalAnimSettings.desiredFPS;
+                fpsInputCtrl.addEventListener('change', (event) => {
+                    GlobalAnimSettings.updateFPS(event.target.value);
+                });
+            }
+
+            // Initialize examples
+            try {
+                const ex1 = new LinearRegressionExample();
+                const ex2 = new SimpleNeuronExample();
+                const ex3 = new GradientDescent2DExample();
+                const ex4 = new PerceptronExample();
+            } catch (e) {
+                console.error("Error initializing one or more examples:", e);
+                showMessage("Error al inicializar ejemplos interactivos. Ver consola.", 5000);
+            }
+            
+            // MathJax should be ready by now due to its own startup config
+            // but ensure explanations are typeset if content was added dynamically (not the case here for explanations)
+             if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+                ['explanation-ex1', 'explanation-ex2', 'explanation-ex3', 'explanation-ex4'].forEach(id => {
+                    const explanationSection = document.getElementById(id);
+                    if (explanationSection && !explanationSection.getAttribute('data-mathjax-typeset')) {
+                         MathJax.typesetPromise([explanationSection])
+                            .then(() => explanationSection.setAttribute('data-mathjax-typeset', 'true'))
+                            .catch(err => console.error(`MathJax error on ${id}:`, err));
+                    }
+                });
+            }
+        });
+
+    </script>
+</body>
+</html>
