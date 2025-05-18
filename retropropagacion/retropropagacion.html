@@ -513,9 +513,11 @@
                             x1: fromNode.x, y1: fromNode.y,
                             x2: toNode.x, y2: toNode.y,
                             stroke: isHighlighted ? '#007bff' : (conn.dashed ? '#a0aec0' : '#6b7280'),
-                            'stroke-width': isHighlighted ? 2.5 : (conn.dashed ? 1.5 : 1),
+                            'stroke-width': isHighlighted ? 2.5 : (conn.dashed ? 1.5 : (conn['stroke-width'] || 1) ), // Allow overriding stroke-width
                             opacity: (this.diagramData.states && !isHighlighted && highlightedConnectionIds.size > 0) ? 0.3 : 1,
                         };
+                        if(conn.color && !isHighlighted) lineAttrs.stroke = conn.color; // Custom color if not highlighted
+
                         if (conn.arrow) {
                             lineAttrs['marker-end'] = isHighlighted ? 'url(#arrowhead-highlight)' : 'url(#arrowhead)';
                         }
@@ -556,7 +558,7 @@
                         case 'sum': baseFill = '#fff0b3'; baseStroke = '#ffc107'; break; // General operation
                         case 'bias': baseFill = '#e0e7ff'; baseStroke = '#4f46e5'; break; // Bias node
                         case 'error': baseFill = '#fecaca'; baseStroke = '#dc2626'; break;
-                        case 'grad': baseFill = '#fecaca'; baseStroke = '#b91c1c'; break;
+                        case 'grad': baseFill = '#fee2e2'; baseStroke = '#b91c1c'; break; // Slightly different for grad
                         default: baseFill = '#e9ecef'; baseStroke = '#adb5bd';
                     }
 
@@ -587,7 +589,8 @@
                                           this.diagramData.title;
                 if (titleTextContent) {
                     const titleText = createSvgElementUtility('text', {
-                        x: this.viewBox.width / 2, y: 20, 
+                        x: this.viewBox.x + this.viewBox.width / 2, // Centered within viewBox
+                        y: this.viewBox.y + 20, // Offset from top of viewBox
                         'text-anchor': 'middle', 'font-size': '14px',
                         'font-weight': 'bold', fill: '#007bff'
                     });
@@ -697,7 +700,7 @@
                 `,
                 diagramDefinition: { 
                     title: "Neurona Detallada",
-                    viewBox: "0 0 400 230", // x y width height
+                    viewBox: "0 0 400 230", 
                     nodes: [
                         { id: 'in1', label: 'x₁', type: 'input', x: 50, y: 50, radius: 15 },
                         { id: 'in2', label: 'x₂', type: 'input', x: 50, y: 110, radius: 15 },
@@ -805,9 +808,9 @@
                         { id: 'c_aL', from: 'a', to: 'L', label: '∂L/∂a', arrow: true, labelOffset: -10 }
                     ],
                     states: [
-                        { description: "Paso 1: ∂L/∂a", highlightedNodes: ['a', 'L'], highlightedConnections: ['c_aL'] },
-                        { description: "Paso 2: (∂L/∂a) ⋅ (∂a/∂z)", highlightedNodes: ['z', 'a', 'L'], highlightedConnections: ['c_za', 'c_aL'] },
-                        { description: "Paso 3: (∂L/∂a) ⋅ (∂a/∂z) ⋅ (∂z/∂W) = ∂L/∂W", highlightedNodes: ['W','z', 'a', 'L'], highlightedConnections: ['c_Wz', 'c_za', 'c_aL'] }
+                        { description: "Paso 1: ∂L/∂a (derivada de la pérdida respecto a la activación 'a')", highlightedNodes: ['a', 'L'], highlightedConnections: ['c_aL'] },
+                        { description: "Paso 2: (∂L/∂a) ⋅ (∂a/∂z) (se multiplica por la derivada de 'a' respecto a 'z')", highlightedNodes: ['z', 'a', 'L'], highlightedConnections: ['c_za', 'c_aL'] },
+                        { description: "Paso 3: (∂L/∂a) ⋅ (∂a/∂z) ⋅ (∂z/∂W) = ∂L/∂W (se multiplica por la derivada de 'z' respecto a 'W')", highlightedNodes: ['W','z', 'a', 'L'], highlightedConnections: ['c_Wz', 'c_za', 'c_aL'] }
                     ]
                 }
             },
@@ -859,9 +862,9 @@
                     ],
                     states: [
                         { title: "Forward: Capa Entrada", description: "Entradas x₁, x₂ y sesgos b⁽¹⁾", highlightedNodes: ['i1', 'i2', 'b1'], highlightedConnections: [] },
-                        { title: "Forward: -> Capa Oculta 1", description: "Cálculo de activaciones a⁽¹⁾", highlightedNodes: ['i1','i2','b1', 'h1_1', 'h1_2', 'h1_3'], highlightedConnections: ['c_i1_h11', 'c_i1_h12', 'c_i1_h13', 'c_i2_h11', 'c_i2_h12', 'c_i2_h13', 'c_b1_h11', 'c_b1_h12', 'c_b1_h13'] },
-                        { title: "Forward: -> Capa Oculta 2", description: "Cálculo de activaciones a⁽²⁾ (con b⁽²⁾)", highlightedNodes: ['h1_1', 'h1_2', 'h1_3', 'b2', 'h2_1', 'h2_2'], highlightedConnections: ['c_h11_h21', 'c_h11_h22', 'c_h12_h21', 'c_h12_h22', 'c_h13_h21', 'c_h13_h22', 'c_b2_h21', 'c_b2_h22'] },
-                        { title: "Forward: -> Capa Salida", description: "Cálculo de predicción ŷ (con b⁽³⁾)", highlightedNodes: ['h2_1', 'h2_2', 'b3', 'o1'], highlightedConnections: ['c_h21_o1', 'c_h22_o1', 'c_b3_o1'] },
+                        { title: "Forward: -> Capa Oculta 1", description: "Cálculo de activaciones a⁽¹⁾ = σ(W⁽¹⁾x + b⁽¹⁾)", highlightedNodes: ['i1','i2','b1', 'h1_1', 'h1_2', 'h1_3'], highlightedConnections: ['c_i1_h11', 'c_i1_h12', 'c_i1_h13', 'c_i2_h11', 'c_i2_h12', 'c_i2_h13', 'c_b1_h11', 'c_b1_h12', 'c_b1_h13'] },
+                        { title: "Forward: -> Capa Oculta 2", description: "Cálculo de activaciones a⁽²⁾ = σ(W⁽²⁾a⁽¹⁾ + b⁽²⁾)", highlightedNodes: ['h1_1', 'h1_2', 'h1_3', 'b2', 'h2_1', 'h2_2'], highlightedConnections: ['c_h11_h21', 'c_h11_h22', 'c_h12_h21', 'c_h12_h22', 'c_h13_h21', 'c_h13_h22', 'c_b2_h21', 'c_b2_h22'] },
+                        { title: "Forward: -> Capa Salida", description: "Cálculo de predicción ŷ = σ(W⁽³⁾a⁽²⁾ + b⁽³⁾)", highlightedNodes: ['h2_1', 'h2_2', 'b3', 'o1'], highlightedConnections: ['c_h21_o1', 'c_h22_o1', 'c_b3_o1'] },
                         { title: "Forward: Red Completa", description: "Flujo completo de información hacia adelante", 
                           highlightedNodes: ['i1', 'i2', 'b1', 'h1_1', 'h1_2', 'h1_3', 'b2', 'h2_1', 'h2_2', 'b3', 'o1'], 
                           highlightedConnections: ['c_i1_h11', 'c_i1_h12', 'c_i1_h13', 'c_i2_h11', 'c_i2_h12', 'c_i2_h13', 'c_b1_h11', 'c_b1_h12', 'c_b1_h13', 'c_h11_h21', 'c_h11_h22', 'c_h12_h21', 'c_h12_h22', 'c_h13_h21', 'c_h13_h22', 'c_b2_h21', 'c_b2_h22', 'c_h21_o1', 'c_h22_o1', 'c_b3_o1']
@@ -880,7 +883,7 @@
                     <p>Con $\delta^L$, podemos calcular los gradientes de la pérdida con respecto a los pesos ($W^L$) y sesgos ($b^L$) de la capa de salida:</p>
                     <div class="math-formula">$\\frac{\\partial L}{\\partial W^L} = \\delta^L (a^{L-1})^T$</div>
                     <div class="math-formula">$\\frac{\\partial L}{\\partial b^L} = \\delta^L$</div>
-                    <p class="text-sm text-gray-600">Diagrama interactivo:</p>
+                    <p class="text-sm text-gray-600">Diagrama interactivo (use los botones para ver los pasos):</p>
                 `,
                 diagramDefinition: {
                     title: "Backward Pass (Capa Salida L)",
@@ -890,21 +893,27 @@
                         { id: 'bL', label: 'b⁽ᴸ⁾', type: 'bias', x: 50, y: 180, radius: 15 },
                         { id: 'zL', label: 'z⁽ᴸ⁾', type: 'sum', x: 180, y: 100, radius: 22 },
                         { id: 'aL', label: 'a⁽ᴸ⁾=ŷ', type: 'neuron', x: 300, y: 100, radius: 22 },
-                        { id: 'L', label: 'L', type: 'output', x: 400, y: 100, radius: 20 },
+                        { id: 'L_node', label: 'L', type: 'output', x: 400, y: 100, radius: 20 }, // Renamed to avoid conflict with variable L
                         { id: 'deltaL', label: 'δ⁽ᴸ⁾', type: 'error', x: 300, y: 220, radius: 22 }, 
                         { id: 'dLdW', label: '∂L/∂W⁽ᴸ⁾', type: 'grad', x: 120, y: 220, radius: 18}, 
                         { id: 'dLdb', label: '∂L/∂b⁽ᴸ⁾', type: 'grad', x: 180, y: 260, radius: 18}  
                     ],
                     connections: [
-                        { id: 'c_a_z', from: 'aL-1', to: 'zL', label: 'W⁽ᴸ⁾', arrow: true },
-                        { id: 'c_b_z', from: 'bL', to: 'zL', arrow: true },
-                        { id: 'c_z_a', from: 'zL', to: 'aL', label: 'σ', arrow: true },
-                        { id: 'c_a_L', from: 'aL', to: 'L', arrow: true },
-                        // Backward
-                        { id: 'c_L_delta', from: 'L', to: 'deltaL', label: "∂L/∂a⁽ᴸ⁾⋅σ'(z⁽ᴸ⁾)", dashed: true, arrow: true, labelOffset: 10 },
+                        { id: 'c_a_z_L', from: 'aL-1', to: 'zL', label: 'W⁽ᴸ⁾', arrow: true }, // Added L suffix for uniqueness
+                        { id: 'c_b_z_L', from: 'bL', to: 'zL', arrow: true },
+                        { id: 'c_z_a_L', from: 'zL', to: 'aL', label: 'σ', arrow: true },
+                        { id: 'c_a_L_node', from: 'aL', to: 'L_node', arrow: true },
+                        { id: 'c_L_delta', from: 'L_node', to: 'deltaL', label: "∂L/∂a⁽ᴸ⁾⋅σ'(z⁽ᴸ⁾)", dashed: true, arrow: true, labelOffset: 10 },
                         { id: 'c_delta_dLdW', from: 'deltaL', to: 'dLdW', label: '(a⁽ᴸ⁻¹⁾)ᵀ', dashed: true, arrow: true },
                         { id: 'c_delta_dLdb', from: 'deltaL', to: 'dLdb', dashed: true, arrow: true },
-                        { id: 'c_delta_zL', from: 'deltaL', to: 'zL', label: 'Error propagado', dashed: true, arrow: true, color: '#ef4444' } 
+                        { id: 'c_delta_zL_prop', from: 'deltaL', to: 'zL', label: 'Error', dashed: true, arrow: true, color: '#ef4444' } 
+                    ],
+                    states: [
+                        { title: "BP Salida: Forward Pass (Recordatorio)", description: "Recordatorio del forward pass para la capa L.", highlightedNodes: ['aL-1', 'bL', 'zL', 'aL', 'L_node'], highlightedConnections: ['c_a_z_L', 'c_b_z_L', 'c_z_a_L', 'c_a_L_node'] },
+                        { title: "BP Salida: Paso 1 - Cálculo de δ⁽ᴸ⁾", description: "Calcular δ⁽ᴸ⁾ = (∂L/∂a⁽ᴸ⁾) ⊙ σ'(z⁽ᴸ⁾).", highlightedNodes: ['L_node', 'aL', 'zL', 'deltaL'], highlightedConnections: ['c_a_L_node', 'c_L_delta', 'c_z_a_L'] },
+                        { title: "BP Salida: Paso 2 - Cálculo de ∂L/∂W⁽ᴸ⁾", description: "Calcular ∂L/∂W⁽ᴸ⁾ = δ⁽ᴸ⁾ (a⁽ᴸ⁻¹⁾)ᵀ.", highlightedNodes: ['deltaL', 'aL-1', 'dLdW'], highlightedConnections: ['c_delta_dLdW', 'c_a_z_L'] },
+                        { title: "BP Salida: Paso 3 - Cálculo de ∂L/∂b⁽ᴸ⁾", description: "Calcular ∂L/∂b⁽ᴸ⁾ = δ⁽ᴸ⁾.", highlightedNodes: ['deltaL', 'bL', 'dLdb'], highlightedConnections: ['c_delta_dLdb', 'c_b_z_L'] },
+                        { title: "BP Salida: Propagación de Error", description: "δ⁽ᴸ⁾ se usa para calcular errores en capas previas (vía W⁽ᴸ⁾).", highlightedNodes: ['deltaL', 'zL', 'aL-1'], highlightedConnections: ['c_delta_zL_prop', 'c_a_z_L'] }
                     ]
                 }
             },
@@ -918,31 +927,37 @@
                     <p>Una vez que tenemos $\delta^l$ para una capa oculta, podemos calcular los gradientes de la pérdida con respecto a los pesos $W^l$ y sesgos $b^l$ de esa capa:</p>
                     <div class="math-formula">$\\frac{\\partial L}{\\partial W^l} = \\delta^l (a^{l-1})^T$</div>
                     <div class="math-formula">$\\frac{\\partial L}{\\partial b^l} = \\delta^l$</div>
-                    <p class="text-sm text-gray-600">Diagrama interactivo:</p>
+                    <p class="text-sm text-gray-600">Diagrama interactivo (use los botones para ver los pasos):</p>
                 `,
                 diagramDefinition: {
                     title: "Backward Pass (Capa Oculta l)",
                     viewBox: "0 0 500 320",
                     nodes: [
-                        { id: 'al-1', label: 'a⁽ˡ⁻¹⁾', type: 'input', x: 50, y: 150, radius: 20 },
-                        { id: 'bl', label: 'b⁽ˡ⁾', type: 'bias', x: 50, y: 230, radius: 15 },
-                        { id: 'zl', label: 'z⁽ˡ⁾', type: 'sum', x: 180, y: 150, radius: 22 },
-                        { id: 'al', label: 'a⁽ˡ⁾', type: 'neuron', x: 300, y: 150, radius: 22 },
-                        { id: 'deltal_plus_1', label: 'δ⁽ˡ⁺¹⁾', type: 'error', x: 430, y: 150, radius: 22 },
-                        { id: 'deltal', label: 'δ⁽ˡ⁾', type: 'error', x: 300, y: 260, radius: 22 },
-                        { id: 'dLdWl', label: '∂L/∂W⁽ˡ⁾', type: 'grad', x: 120, y: 260, radius: 18 },
-                        { id: 'dLdbl', label: '∂L/∂b⁽ˡ⁾', type: 'grad', x: 180, y: 300, radius: 18 }
+                        { id: 'al-1_h', label: 'a⁽ˡ⁻¹⁾', type: 'input', x: 50, y: 150, radius: 20 }, // Suffix _h for hidden
+                        { id: 'bl_h', label: 'b⁽ˡ⁾', type: 'bias', x: 50, y: 230, radius: 15 },
+                        { id: 'zl_h', label: 'z⁽ˡ⁾', type: 'sum', x: 180, y: 150, radius: 22 },
+                        { id: 'al_h', label: 'a⁽ˡ⁾', type: 'neuron', x: 300, y: 150, radius: 22 },
+                        { id: 'deltal_plus_1_h', label: 'δ⁽ˡ⁺¹⁾', type: 'error', x: 430, y: 150, radius: 22 },
+                        { id: 'deltal_h', label: 'δ⁽ˡ⁾', type: 'error', x: 300, y: 260, radius: 22 },
+                        { id: 'dLdWl_h', label: '∂L/∂W⁽ˡ⁾', type: 'grad', x: 120, y: 260, radius: 18 },
+                        { id: 'dLdbl_h', label: '∂L/∂b⁽ˡ⁾', type: 'grad', x: 180, y: 300, radius: 18 }
                     ],
                     connections: [
-                        { id: 'c_al-1_zl', from: 'al-1', to: 'zl', label: 'W⁽ˡ⁾', arrow: true },
-                        { id: 'c_bl_zl', from: 'bl', to: 'zl', arrow: true },
-                        { id: 'c_zl_al', from: 'zl', to: 'al', label: 'σ', arrow: true },
-                        { id: 'c_al_deltap1', from: 'al', to: 'deltal_plus_1', label: 'W⁽ˡ⁺¹⁾', arrow: true }, 
-                        // Backward
-                        { id: 'c_deltap1_deltal', from: 'deltal_plus_1', to: 'deltal', label: "(W⁽ˡ⁺¹⁾)ᵀ⋅σ'(z⁽ˡ⁾)", dashed: true, arrow: true, labelOffset: 10 },
-                        { id: 'c_deltal_dLdWl', from: 'deltal', to: 'dLdWl', label: '(a⁽ˡ⁻¹⁾)ᵀ', dashed: true, arrow: true },
-                        { id: 'c_deltal_dLdbl', from: 'deltal', to: 'dLdbl', dashed: true, arrow: true },
-                        { id: 'c_deltal_zl', from: 'deltal', to: 'zl', label: 'Error propagado', dashed: true, arrow: true, color: '#ef4444' }
+                        { id: 'c_al-1_zl_h', from: 'al-1_h', to: 'zl_h', label: 'W⁽ˡ⁾', arrow: true },
+                        { id: 'c_bl_zl_h', from: 'bl_h', to: 'zl_h', arrow: true },
+                        { id: 'c_zl_al_h', from: 'zl_h', to: 'al_h', label: 'σ', arrow: true },
+                        { id: 'c_al_deltap1_h', from: 'al_h', to: 'deltal_plus_1_h', label: 'W⁽ˡ⁺¹⁾', arrow: true }, 
+                        { id: 'c_deltap1_deltal_h', from: 'deltal_plus_1_h', to: 'deltal_h', label: "(W⁽ˡ⁺¹⁾)ᵀ⋅σ'(z⁽ˡ⁾)", dashed: true, arrow: true, labelOffset: 10 },
+                        { id: 'c_deltal_dLdWl_h', from: 'deltal_h', to: 'dLdWl_h', label: '(a⁽ˡ⁻¹⁾)ᵀ', dashed: true, arrow: true },
+                        { id: 'c_deltal_dLdbl_h', from: 'deltal_h', to: 'dLdbl_h', dashed: true, arrow: true },
+                        { id: 'c_deltal_zl_prop_h', from: 'deltal_h', to: 'zl_h', label: 'Error', dashed: true, arrow: true, color: '#ef4444' }
+                    ],
+                    states: [
+                        { title: "BP Oculta: Forward (Recordatorio)", description: "Recordatorio del forward pass para la capa l y conexión a l+1.", highlightedNodes: ['al-1_h', 'bl_h', 'zl_h', 'al_h', 'deltal_plus_1_h'], highlightedConnections: ['c_al-1_zl_h', 'c_bl_zl_h', 'c_zl_al_h', 'c_al_deltap1_h'] },
+                        { title: "BP Oculta: Paso 1 - Cálculo de δ⁽ˡ⁾", description: "Calcular δ⁽ˡ⁾ = ((W⁽ˡ⁺¹⁾)ᵀ δ⁽ˡ⁺¹⁾) ⊙ σ'(z⁽ˡ⁾).", highlightedNodes: ['deltal_plus_1_h', 'al_h', 'zl_h', 'deltal_h'], highlightedConnections: ['c_al_deltap1_h', 'c_deltap1_deltal_h', 'c_zl_al_h'] },
+                        { title: "BP Oculta: Paso 2 - Cálculo de ∂L/∂W⁽ˡ⁾", description: "Calcular ∂L/∂W⁽ˡ⁾ = δ⁽ˡ⁾ (a⁽ˡ⁻¹⁾)ᵀ.", highlightedNodes: ['deltal_h', 'al-1_h', 'dLdWl_h'], highlightedConnections: ['c_deltal_dLdWl_h', 'c_al-1_zl_h'] },
+                        { title: "BP Oculta: Paso 3 - Cálculo de ∂L/∂b⁽ˡ⁾", description: "Calcular ∂L/∂b⁽ˡ⁾ = δ⁽ˡ⁾.", highlightedNodes: ['deltal_h', 'bl_h', 'dLdbl_h'], highlightedConnections: ['c_deltal_dLdbl_h', 'c_bl_zl_h'] },
+                        { title: "BP Oculta: Propagación de Error", description: "δ⁽ˡ⁾ se usa para calcular errores en capas previas (vía W⁽ˡ⁾).", highlightedNodes: ['deltal_h', 'zl_h', 'al-1_h'], highlightedConnections: ['c_deltal_zl_prop_h', 'c_al-1_zl_h'] }
                     ]
                 }
             },
@@ -955,25 +970,30 @@
                     <div class="math-formula">$W^l_{nuevo} = W^l_{viejo} - \\eta \\frac{\\partial L}{\\partial W^l}$</div>
                     <div class="math-formula">$b^l_{nuevo} = b^l_{viejo} - \\eta \\frac{\\partial L}{\\partial b^l}$</div>
                     <p>Donde $\eta$ es la tasa de aprendizaje. Esta actualización se realiza para todos los pesos y sesgos en todas las capas. Todo el proceso (paso hacia adelante, cálculo de la pérdida, paso hacia atrás y actualización de pesos) constituye una <strong class='text-blue-600'>iteración</strong> de entrenamiento.</p>
-                    <p class="text-sm text-gray-600">Diagrama interactivo (similar al de Descenso de Gradiente):</p>
+                    <p class="text-sm text-gray-600">Diagrama interactivo (use los botones para ver los pasos):</p>
                 `,
-                 diagramDefinition: { // Re-using structure from subtopic 3
+                 diagramDefinition: { 
                     title: "Actualización de Peso W",
                     viewBox: "0 0 500 280",
                     nodes: [
-                        { id: 'w_old', label: 'W_viejo', type: 'input', x: 80, y: 100, radius: 20 },
-                        { id: 'gradL', label: '∂L/∂W', type: 'grad', x: 80, y: 200, radius: 20 }, // Changed type
-                        { id: 'eta', label: 'η', type: 'input', x: 200, y: 200, radius: 15 },
-                        { id: 'multiply', label: '×', type: 'sum', x: 280, y: 150, radius: 20 }, 
-                        { id: 'subtract', label: '-', type: 'sum', x: 400, y: 100, radius: 20 },
-                        { id: 'w_new', label: 'W_nuevo', type: 'output', x: 480, y: 100, radius: 20 }
+                        { id: 'w_old_upd', label: 'W_viejo', type: 'input', x: 80, y: 100, radius: 20 }, // Suffix _upd
+                        { id: 'gradL_upd', label: '∂L/∂W', type: 'grad', x: 80, y: 200, radius: 20 },
+                        { id: 'eta_upd', label: 'η', type: 'input', x: 200, y: 200, radius: 15 },
+                        { id: 'multiply_upd', label: '×', type: 'sum', x: 280, y: 150, radius: 20 }, 
+                        { id: 'subtract_upd', label: '-', type: 'sum', x: 400, y: 100, radius: 20 },
+                        { id: 'w_new_upd', label: 'W_nuevo', type: 'output', x: 480, y: 100, radius: 20 }
                     ],
                     connections: [
-                        { id: 'c1', from: 'gradL', to: 'multiply', arrow: true },
-                        { id: 'c2', from: 'eta', to: 'multiply', arrow: true },
-                        { id: 'c3', from: 'multiply', to: 'subtract', label: 'η ∂L/∂W', arrow: true },
-                        { id: 'c4', from: 'w_old', to: 'subtract', arrow: true },
-                        { id: 'c5', from: 'subtract', to: 'w_new', arrow: true}
+                        { id: 'c1_upd', from: 'gradL_upd', to: 'multiply_upd', arrow: true },
+                        { id: 'c2_upd', from: 'eta_upd', to: 'multiply_upd', arrow: true },
+                        { id: 'c3_upd', from: 'multiply_upd', to: 'subtract_upd', label: 'η ∂L/∂W', arrow: true },
+                        { id: 'c4_upd', from: 'w_old_upd', to: 'subtract_upd', arrow: true },
+                        { id: 'c5_upd', from: 'subtract_upd', to: 'w_new_upd', arrow: true}
+                    ],
+                    states: [
+                        { title: "Actualización: Paso 1", description: "Se tienen W_viejo y el gradiente ∂L/∂W.", highlightedNodes: ['w_old_upd', 'gradL_upd'], highlightedConnections: [] },
+                        { title: "Actualización: Paso 2", description: "Se multiplica el gradiente por la tasa de aprendizaje η.", highlightedNodes: ['gradL_upd', 'eta_upd', 'multiply_upd'], highlightedConnections: ['c1_upd', 'c2_upd'] },
+                        { title: "Actualización: Paso 3", description: "Se resta η ∂L/∂W de W_viejo para obtener W_nuevo.", highlightedNodes: ['w_old_upd', 'multiply_upd', 'subtract_upd', 'w_new_upd'], highlightedConnections: ['c3_upd', 'c4_upd', 'c5_upd'] }
                     ]
                 }
             },
@@ -991,49 +1011,55 @@
                     <div class="math-formula">$\\delta_h = (\delta_o w_2) \\sigma_h'(z_h)$</div>
                     <div class="math-formula">$\\frac{\\partial L}{\\partial w_1} = \\delta_h x \\quad ; \\quad \\frac{\\partial L}{\\partial b_1} = \\delta_h$</div>
                     <p><strong>Actualización:</strong> $w \leftarrow w - \eta \frac{\\partial L}{\\partial w}$, $b \leftarrow b - \eta \frac{\\partial L}{\\partial b}$ para $w_1, b_1, w_2, b_2$.</p>
-                    <p class="text-sm text-gray-600">Diagrama interactivo:</p>
+                    <p class="text-sm text-gray-600">Diagrama interactivo (use los botones para ver los pasos):</p>
                 `,
                 diagramDefinition: {
-                    title: "Red Simple (1-1-1) con Flujo Completo",
-                    viewBox: "0 0 600 350", // Wider to accommodate backward pass labels
+                    title: "Red Simple (1-1-1) Flujo Completo",
+                    viewBox: "0 0 600 350", 
                     nodes: [
-                        { id: 'x', label: 'x', type: 'input', x: 50, y: 100, radius: 15 },
-                        { id: 'b1_node', label: 'b₁', type: 'bias', x: 50, y: 160, radius: 15 },
-                        { id: 'zh', label: 'zₕ', type: 'sum', x: 150, y: 100, radius: 20 },
-                        { id: 'ah', label: 'aₕ', type: 'neuron', x: 250, y: 100, radius: 20 },
-                        { id: 'b2_node', label: 'b₂', type: 'bias', x: 250, y: 160, radius: 15 },
-                        { id: 'zo', label: 'zₒ', type: 'sum', x: 350, y: 100, radius: 20 },
-                        { id: 'ao', label: 'aₒ=ŷ', type: 'neuron', x: 450, y: 100, radius: 20 },
-                        { id: 'L', label: 'L', type: 'output', x: 550, y: 100, radius: 15 },
-                        // Backward pass nodes
-                        { id: 'delta_o', label: 'δₒ', type: 'error', x: 450, y: 250, radius: 20 },
-                        { id: 'dLdw2', label: '∂L/∂w₂', type: 'grad', x: 350, y: 290, radius: 15 },
-                        { id: 'dLdb2', label: '∂L/∂b₂', type: 'grad', x: 420, y: 290, radius: 15 },
-                        { id: 'delta_h', label: 'δₕ', type: 'error', x: 250, y: 250, radius: 20 },
-                        { id: 'dLdw1', label: '∂L/∂w₁', type: 'grad', x: 150, y: 290, radius: 15 },
-                        { id: 'dLdb1', label: '∂L/∂b₁', type: 'grad', x: 220, y: 290, radius: 15 }
+                        { id: 'x_s', label: 'x', type: 'input', x: 50, y: 100, radius: 15 }, // _s for simple
+                        { id: 'b1_s', label: 'b₁', type: 'bias', x: 50, y: 160, radius: 15 },
+                        { id: 'zh_s', label: 'zₕ', type: 'sum', x: 150, y: 100, radius: 20 },
+                        { id: 'ah_s', label: 'aₕ', type: 'neuron', x: 250, y: 100, radius: 20 },
+                        { id: 'b2_s', label: 'b₂', type: 'bias', x: 250, y: 160, radius: 15 },
+                        { id: 'zo_s', label: 'zₒ', type: 'sum', x: 350, y: 100, radius: 20 },
+                        { id: 'ao_s', label: 'aₒ=ŷ', type: 'neuron', x: 450, y: 100, radius: 20 },
+                        { id: 'L_s', label: 'L', type: 'output', x: 550, y: 100, radius: 15 },
+                        { id: 'delta_o_s', label: 'δₒ', type: 'error', x: 450, y: 250, radius: 20 },
+                        { id: 'dLdw2_s', label: '∂L/∂w₂', type: 'grad', x: 350, y: 290, radius: 15 },
+                        { id: 'dLdb2_s', label: '∂L/∂b₂', type: 'grad', x: 420, y: 290, radius: 15 },
+                        { id: 'delta_h_s', label: 'δₕ', type: 'error', x: 250, y: 250, radius: 20 },
+                        { id: 'dLdw1_s', label: '∂L/∂w₁', type: 'grad', x: 150, y: 290, radius: 15 },
+                        { id: 'dLdb1_s', label: '∂L/∂b₁', type: 'grad', x: 220, y: 290, radius: 15 }
                     ],
                     connections: [
-                        // Forward pass
-                        { id: 'c_x_zh', from: 'x', to: 'zh', label: 'w₁', arrow: true },
-                        { id: 'c_b1_zh', from: 'b1_node', to: 'zh', arrow: true },
-                        { id: 'c_zh_ah', from: 'zh', to: 'ah', label: 'σₕ', arrow: true },
-                        { id: 'c_ah_zo', from: 'ah', to: 'zo', label: 'w₂', arrow: true },
-                        { id: 'c_b2_zo', from: 'b2_node', to: 'zo', arrow: true },
-                        { id: 'c_zo_ao', from: 'zo', to: 'ao', label: 'σₒ', arrow: true },
-                        { id: 'c_ao_L', from: 'ao', to: 'L', arrow: true },
-                        // Backward pass
-                        { id: 'c_L_delta_o', from: 'L', to: 'delta_o', label: "∂L/∂aₒ⋅σₒ'(zₒ)", dashed: true, arrow: true, labelOffset: 10 },
-                        { id: 'c_delta_o_dLdw2', from: 'delta_o', to: 'dLdw2', label: 'aₕ', dashed: true, arrow: true },
-                        { id: 'c_delta_o_dLdb2', from: 'delta_o', to: 'dLdb2', dashed: true, arrow: true },
-                        { id: 'c_delta_o_delta_h', from: 'delta_o', to: 'delta_h', label: "w₂⋅σₕ'(zₕ)", dashed: true, arrow: true, labelOffset: 10 },
-                        { id: 'c_delta_h_dLdw1', from: 'delta_h', to: 'dLdw1', label: 'x', dashed: true, arrow: true },
-                        { id: 'c_delta_h_dLdb1', from: 'delta_h', to: 'dLdb1', dashed: true, arrow: true },
-                         // Connections showing where gradients apply
-                        { id: 'cdLdw2_zo', from: 'dLdw2', to: 'zo', dashed: true, arrow: false, color: '#b91c1c', 'stroke-width': 0.8 },
-                        { id: 'cdLdb2_b2', from: 'dLdb2', to: 'b2_node', dashed: true, arrow: false, color: '#b91c1c', 'stroke-width': 0.8 },
-                        { id: 'cdLdw1_zh', from: 'dLdw1', to: 'zh', dashed: true, arrow: false, color: '#b91c1c', 'stroke-width': 0.8 },
-                        { id: 'cdLdb1_b1', from: 'dLdb1', to: 'b1_node', dashed: true, arrow: false, color: '#b91c1c', 'stroke-width': 0.8 }
+                        { id: 'c_x_zh_s', from: 'x_s', to: 'zh_s', label: 'w₁', arrow: true },
+                        { id: 'c_b1_zh_s', from: 'b1_s', to: 'zh_s', arrow: true },
+                        { id: 'c_zh_ah_s', from: 'zh_s', to: 'ah_s', label: 'σₕ', arrow: true },
+                        { id: 'c_ah_zo_s', from: 'ah_s', to: 'zo_s', label: 'w₂', arrow: true },
+                        { id: 'c_b2_zo_s', from: 'b2_s', to: 'zo_s', arrow: true },
+                        { id: 'c_zo_ao_s', from: 'zo_s', to: 'ao_s', label: 'σₒ', arrow: true },
+                        { id: 'c_ao_L_s', from: 'ao_s', to: 'L_s', arrow: true },
+                        { id: 'c_L_delta_o_s', from: 'L_s', to: 'delta_o_s', label: "∂L/∂aₒ⋅σₒ'(zₒ)", dashed: true, arrow: true, labelOffset: 10 },
+                        { id: 'c_delta_o_dLdw2_s', from: 'delta_o_s', to: 'dLdw2_s', label: 'aₕ', dashed: true, arrow: true },
+                        { id: 'c_delta_o_dLdb2_s', from: 'delta_o_s', to: 'dLdb2_s', dashed: true, arrow: true },
+                        { id: 'c_delta_o_delta_h_s', from: 'delta_o_s', to: 'delta_h_s', label: "w₂⋅σₕ'(zₕ)", dashed: true, arrow: true, labelOffset: 10 },
+                        { id: 'c_delta_h_dLdw1_s', from: 'delta_h_s', to: 'dLdw1_s', label: 'x', dashed: true, arrow: true },
+                        { id: 'c_delta_h_dLdb1_s', from: 'delta_h_s', to: 'dLdb1_s', dashed: true, arrow: true },
+                        { id: 'cdLdw2_zo_s', from: 'dLdw2_s', to: 'zo_s', dashed: true, arrow: false, color: '#b91c1c', 'stroke-width': 0.8 },
+                        { id: 'cdLdb2_b2_s', from: 'dLdb2_s', to: 'b2_s', dashed: true, arrow: false, color: '#b91c1c', 'stroke-width': 0.8 },
+                        { id: 'cdLdw1_zh_s', from: 'dLdw1_s', to: 'zh_s', dashed: true, arrow: false, color: '#b91c1c', 'stroke-width': 0.8 },
+                        { id: 'cdLdb1_b1_s', from: 'dLdb1_s', to: 'b1_s', dashed: true, arrow: false, color: '#b91c1c', 'stroke-width': 0.8 }
+                    ],
+                    states: [
+                        { title: "Ej. Simple: Forward - Capa Oculta (zₕ, aₕ)", description: "Cálculo de zₕ = w₁x + b₁ y aₕ = σₕ(zₕ).", highlightedNodes: ['x_s', 'b1_s', 'zh_s', 'ah_s'], highlightedConnections: ['c_x_zh_s', 'c_b1_zh_s', 'c_zh_ah_s'] },
+                        { title: "Ej. Simple: Forward - Capa Salida (zₒ, aₒ)", description: "Cálculo de zₒ = w₂aₕ + b₂ y aₒ = σₒ(zₒ).", highlightedNodes: ['ah_s', 'b2_s', 'zo_s', 'ao_s'], highlightedConnections: ['c_ah_zo_s', 'c_b2_zo_s', 'c_zo_ao_s'] },
+                        { title: "Ej. Simple: Forward - Cálculo de Pérdida L", description: "Cálculo de L = ½(y - aₒ)². (y no se muestra explícitamente).", highlightedNodes: ['ao_s', 'L_s'], highlightedConnections: ['c_ao_L_s'] },
+                        { title: "Ej. Simple: Backward - δₒ en Capa Salida", description: "Cálculo de δₒ = (aₒ - y)σₒ'(zₒ).", highlightedNodes: ['L_s', 'ao_s', 'zo_s', 'delta_o_s'], highlightedConnections: ['c_L_delta_o_s', 'c_zo_ao_s'] },
+                        { title: "Ej. Simple: Backward - Gradientes ∂L/∂w₂, ∂L/∂b₂", description: "Cálculo de ∂L/∂w₂ = δₒaₕ y ∂L/∂b₂ = δₒ.", highlightedNodes: ['delta_o_s', 'ah_s', 'b2_s', 'dLdw2_s', 'dLdb2_s'], highlightedConnections: ['c_delta_o_dLdw2_s', 'c_delta_o_dLdb2_s', 'cdLdw2_zo_s', 'cdLdb2_b2_s'] },
+                        { title: "Ej. Simple: Backward - δₕ en Capa Oculta", description: "Cálculo de δₕ = (δₒw₂)σₕ'(zₕ).", highlightedNodes: ['delta_o_s', 'ah_s', 'zo_s', 'zh_s', 'delta_h_s'], highlightedConnections: ['c_delta_o_delta_h_s', 'c_ah_zo_s', 'c_zh_ah_s'] },
+                        { title: "Ej. Simple: Backward - Gradientes ∂L/∂w₁, ∂L/∂b₁", description: "Cálculo de ∂L/∂w₁ = δₕx y ∂L/∂b₁ = δₕ.", highlightedNodes: ['delta_h_s', 'x_s', 'b1_s', 'dLdw1_s', 'dLdb1_s'], highlightedConnections: ['c_delta_h_dLdw1_s', 'c_delta_h_dLdb1_s', 'cdLdw1_zh_s', 'cdLdb1_b1_s'] },
+                        { title: "Ej. Simple: Actualización (Conceptual)", description: "Todos los pesos (w₁, b₁, w₂, b₂) se actualizan usando sus gradientes y η.", highlightedNodes: ['dLdw1_s', 'dLdb1_s', 'dLdw2_s', 'dLdb2_s'], highlightedConnections: ['cdLdw1_zh_s', 'cdLdb1_b1_s', 'cdLdw2_zo_s', 'cdLdb2_b2_s'] }
                     ]
                 }
             },
