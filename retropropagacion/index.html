@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retropropagación Interactiva (v3)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="p-4 md:p-8">
+    <div id="custom-message-box" class="message-box"></div>
+
+    <header class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-blue-600">Entendiendo la Retropropagación (Backpropagation)</h1>
+        <p class="text-lg text-gray-700 mt-2">Una guía interactiva para aprender el algoritmo fundamental del Deep Learning.</p>
+    </header>
+
+    <main>
+        <section id="global-diagram-controls" class="content-section global-controls-container">
+            <h2 class="text-xl font-semibold mb-2">Controles Globales de Diagramas</h2>
+            <div>
+                <input type="checkbox" id="showFormulaAnnotationsToggle" class="mr-2 align-middle">
+                <label for="showFormulaAnnotationsToggle" class="align-middle text-sm">Mostrar Fórmulas en Diagramas de Subtemas</label>
+            </div>
+        </section>
+
+        <section id="introduction" class="content-section">
+            <h2>¿Qué es la Retropropagación?</h2>
+            <p>La retropropagación es un algoritmo fundamental utilizado para entrenar redes neuronales artificiales. Su nombre completo es "propagación hacia atrás de errores" (backward propagation of errors). En esencia, permite a la red aprender de sus errores ajustando sus parámetros internos (pesos y sesgos) de manera eficiente.</p>
+        </section>
+
+        <section id="subtopics" class="content-section">
+            <h2>Subtemas Detallados de la Retropropagación</h2>
+            <div id="tabs-container" class="mb-4 flex flex-wrap border-b border-gray-300">
+            </div>
+            <div id="tab-content-container">
+            </div>
+        </section>
+
+        <section class="content-section">
+            <h2>Controles Globales de Ejemplos</h2>
+            <div class="controls">
+                <label for="fpsControl">FPS Animaciones (Ejemplos):</label>
+                <input type="number" id="fpsControl" value="30" min="1" max="120" class="w-20">
+            </div>
+        </section>
+
+        <section id="interactive-examples" class="content-section">
+            <h2>Ejemplos Interactivos de Algoritmos</h2>
+            <p>Aquí puedes experimentar con los algoritmos de forma práctica.</p>
+            
+            <div id="example1-1d-linear-regression" class="mt-6">
+                <h3>Ejemplo 1 (1D): Regresión Lineal</h3>
+                <p>Visualiza cómo el algoritmo de descenso de gradiente encuentra la línea ($y = mx + c$) que mejor se ajusta a un conjunto de puntos. Los datos $x$ se generan en un rango de 0 a 10.</p>
+                <div class="interactive-container">
+                    <div class="controls">
+                        <label for="learningRate_ex1_input">Tasa Aprendizaje ($\eta$):</label>
+                        <input type="number" id="learningRate_ex1_input" value="0.005" step="0.0001" min="0.0001" max="0.1">
+                        <button id="startButton_ex1">Iniciar</button>
+                        <button id="pauseButton_ex1">Pausar</button>
+                        <button id="resetButton_ex1">Reiniciar</button>
+                        <button id="stepButton_ex1">Un Paso</button>
+                        <div class="info-display mt-2">
+                            <p>Iteración: <span id="iterationCount_ex1">0</span></p>
+                            <p>Error (MSE): <span id="errorValue_ex1">N/A</span></p>
+                            <p>Ecuación: $y = <span id="slopeValue_ex1">m</span>x + <span id="interceptValue_ex1">c</span>$</p>
+                        </div>
+                    </div>
+                    <svg id="example-svg-ex1" width="600" height="400" viewBox="0 0 600 400" class="example-svg"></svg>
+                </div>
+                <div id="explanation-ex1" class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <h4>¿Cómo funciona este ejemplo?</h4>
+                    <ol class="list-decimal list-inside text-sm">
+                        <li><strong>Datos:</strong> Se generan puntos $(x, y)$ con relación lineal aproximada.</li>
+                        <li><strong>Inicialización:</strong> $m$ y $c$ con valores aleatorios.</li>
+                        <li><strong>Predicción:</strong> $\hat{y}_i = m x_i + c$.</li>
+                        <li><strong>Error (MSE):</strong> $L = \frac{1}{N} \sum (y_i - \hat{y}_i)^2$.</li>
+                        <li><strong>Gradientes:</strong> $\frac{\partial L}{\partial m} = -\frac{2}{N} \sum x_i (y_i - \hat{y}_i)$, $\frac{\partial L}{\partial c} = -\frac{2}{N} \sum (y_i - \hat{y}_i)$.</li>
+                        <li><strong>Actualización:</strong> $m \leftarrow m - \eta \frac{\partial L}{\partial m}$, $c \leftarrow c - \eta \frac{\partial L}{\partial c}$.</li>
+                        <li><strong>Repetir.</strong></li>
+                    </ol>
+                </div>
+            </div>
+
+            <div id="example2-1d-simple-neuron" class="mt-10">
+                <h3>Ejemplo 2 (1D): Neurona Simple</h3>
+                <p>Observa cómo una única neurona con función de activación sigmoide aprende a mapear una entrada $x$ a una salida objetivo $y_{true}$ ajustando su peso $w$ y sesgo $b$. Ecuación: $\hat{y} = \sigma(wx + b)$.</p>
+                <div class="interactive-container">
+                    <div class="controls">
+                        <label for="inputX_ex2_input">Entrada (x):</label>
+                        <input type="number" id="inputX_ex2_input" value="0.5" step="0.1">
+                        <label for="targetY_ex2_input">Salida Objetivo (y_true):</label>
+                        <input type="number" id="targetY_ex2_input" value="0.8" step="0.1" min="0" max="1">
+                        <label for="learningRate_ex2_input">Tasa Aprendizaje ($\eta$):</label>
+                        <input type="number" id="learningRate_ex2_input" value="0.1" step="0.01" min="0.001" max="1">
+                        <button id="startButton_ex2">Iniciar</button>
+                        <button id="pauseButton_ex2">Pausar</button>
+                        <button id="resetButton_ex2">Reiniciar</button>
+                        <button id="stepButton_ex2">Un Paso</button>
+                        <div class="info-display mt-2">
+                            <p>Iteración: <span id="iterationCount_ex2">0</span></p>
+                            <p>Peso (w): <span id="weightW_ex2">0</span></p>
+                            <p>Sesgo (b): <span id="biasB_ex2">0</span></p>
+                            <p>Suma Ponderada (z): <span id="z_ex2">0</span></p>
+                            <p>Salida ($\hat{y}$): <span id="outputY_ex2">0</span></p>
+                            <p>Error (MSE): <span id="errorValue_ex2">N/A</span></p>
+                        </div>
+                    </div>
+                    <svg id="example-svg-ex2" width="600" height="250" viewBox="0 0 600 250" class="example-svg"></svg>
+                </div>
+                <div id="explanation-ex2" class="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
+                    <h4>¿Cómo funciona este ejemplo?</h4>
+                    <ol class="list-decimal list-inside text-sm">
+                        <li><strong>Entrada y Objetivo:</strong> Se definen $x$ y $y_{true}$.</li>
+                        <li><strong>Inicialización:</strong> Peso $w$ y sesgo $b$ aleatorios o cero.</li>
+                        <li><strong>Paso Adelante (Forward Pass):</strong>
+                            <div class="math-formula">$z = wx + b$</div>
+                            <div class="math-formula">$\hat{y} = \sigma(z) = \frac{1}{1 + e^{-z}}$ (Función Sigmoide)</div>
+                        </li>
+                        <li><strong>Error (MSE):</strong> $L = \frac{1}{2} (\hat{y} - y_{true})^2$.</li>
+                        <li><strong>Gradientes (Paso Atrás - Backpropagation):</strong>
+                            <div class="math-formula">$\frac{\partial L}{\partial w} = (\hat{y} - y_{true}) \cdot \sigma'(z) \cdot x$</div>
+                            <div class="math-formula">$\frac{\partial L}{\partial b} = (\hat{y} - y_{true}) \cdot \sigma'(z)$</div>
+                            Donde $\sigma'(z) = \sigma(z)(1-\sigma(z))$.
+                        </li>
+                        <li><strong>Actualización de Pesos:</strong>
+                            <div class="math-formula">$w \leftarrow w - \eta \frac{\partial L}{\partial w}$</div>
+                            <div class="math-formula">$b \leftarrow b - \eta \frac{\partial L}{\partial b}$</div>
+                        </li>
+                        <li><strong>Repetir.</strong></li>
+                    </ol>
+                </div>
+            </div>
+
+            <div id="example3-2d-gradient-descent" class="mt-10">
+                <h3>Ejemplo 3 (2D): Descenso de Gradiente</h3>
+                <p>Visualiza el algoritmo de descenso de gradiente encontrando el mínimo de la función $f(x,y) = x^2 + y^2$. Las líneas representan contornos de igual valor.</p>
+                <div class="interactive-container">
+                    <div class="controls">
+                        <label for="startX_ex3_input">X Inicial:</label>
+                        <input type="number" id="startX_ex3_input" value="4" step="0.5" min="-5" max="5">
+                        <label for="startY_ex3_input">Y Inicial:</label>
+                        <input type="number" id="startY_ex3_input" value="4" step="0.5" min="-5" max="5">
+                        <label for="learningRate_ex3_input">Tasa Aprendizaje ($\eta$):</label>
+                        <input type="number" id="learningRate_ex3_input" value="0.1" step="0.01" min="0.01" max="0.5">
+                        <button id="startButton_ex3">Iniciar</button>
+                        <button id="pauseButton_ex3">Pausar</button>
+                        <button id="resetButton_ex3">Reiniciar</button>
+                        <button id="stepButton_ex3">Un Paso</button>
+                        <div class="info-display mt-2">
+                            <p>Iteración: <span id="iterationCount_ex3">0</span></p>
+                            <p>Posición (x,y): (<span id="currentX_ex3">0</span>, <span id="currentY_ex3">0</span>)</p>
+                            <p>Costo (f(x,y)): <span id="costValue_ex3">N/A</span></p>
+                        </div>
+                    </div>
+                    <svg id="example-svg-ex3" width="400" height="400" viewBox="0 0 400 400" class="example-svg"></svg>
+                </div>
+                <div id="explanation-ex3" class="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-md">
+                    <h4>¿Cómo funciona este ejemplo?</h4>
+                    <ol class="list-decimal list-inside text-sm">
+                        <li><strong>Función de Costo:</strong> $f(x,y) = x^2 + y^2$. Mínimo en $(0,0)$.</li>
+                        <li><strong>Inicialización:</strong> Punto $(x,y)$ inicial definido por el usuario.</li>
+                        <li><strong>Gradientes:</strong> $\frac{\partial f}{\partial x} = 2x$, $\frac{\partial f}{\partial y} = 2y$.</li>
+                        <li><strong>Actualización:</strong> $x \leftarrow x - \eta \frac{\partial f}{\partial x}$, $y \leftarrow y - \eta \frac{\partial f}{\partial y}$.</li>
+                        <li><strong>Repetir.</strong></li>
+                    </ol>
+                </div>
+            </div>
+
+            <div id="example4-2d-perceptron" class="mt-10">
+                <h3>Ejemplo 4 (2D): Clasificador Lineal Múltiple (Capa de Perceptrones)</h3>
+                <p>Visualiza cómo una capa de Perceptrones independientes aprende a separar dos clases de puntos. Cada Perceptrón tiene su propia línea de decisión. $x, y \in [-5, 5]$.</p>
+                <div class="interactive-container">
+                    <div class="controls">
+                        <div>
+                            <label for="numNeurons_ex4_input"># Neuronas (Perceptrones):</label>
+                            <input type="range" id="numNeurons_ex4_input" value="5" min="3" max="20" step="1">
+                            <span id="numNeurons_ex4_display" class="ml-2 font-semibold">5</span>
+                        </div>
+                        <div class="mt-2">
+                            <label for="learningRate_ex4_input">Tasa Aprendizaje ($\eta$):</label>
+                            <input type="number" id="learningRate_ex4_input" value="0.05" step="0.001" min="0.001" max="0.5">
+                            <button id="generateData_ex4">Nuevos Datos</button>
+                        </div>
+                        <div class="mt-2">
+                            <button id="startButton_ex4">Iniciar</button>
+                            <button id="pauseButton_ex4">Pausar</button>
+                            <button id="resetButton_ex4">Reiniciar</button>
+                            <button id="stepButton_ex4">Un Paso</button>
+                        </div>
+                        <div class="info-display mt-2">
+                            <p>Iteración Global: <span id="iterationCount_ex4">0</span></p>
+                            <p>Perceptrón Activo: #<span id="activeNeuronId_ex4">1</span></p>
+                            <p>Ecuación (Activo): <span id="weights_ex4_wx">wx</span>x + <span id="weights_ex4_wy">wy</span>y + <span id="weights_ex4_b">b</span> = 0</p>
+                            <p>Precisión (Activo): <span id="accuracy_active_ex4">N/A</span></p>
+                            <p>Precisión Promedio (Todos): <span id="accuracy_avg_ex4">N/A</span></p>
+                        </div>
+                    </div>
+                    <svg id="example-svg-ex4" width="450" height="450" viewBox="0 0 450 450" class="example-svg"></svg>
+                </div>
+                <div id="explanation-ex4" class="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                    <h4>¿Cómo funciona este ejemplo?</h4>
+                    <ol class="list-decimal list-inside text-sm">
+                        <li><strong>Capa de Perceptrones:</strong> Se simulan múltiples Perceptrones independientes. El número se puede ajustar (3-20).</li>
+                        <li><strong>Datos:</strong> Se generan puntos $(x_i, y_i)$ para dos clases (etiquetas $t_i \in \{-1, 1\}$).</li>
+                        <li><strong>Inicialización:</strong> Cada Perceptrón tiene pesos $w_x, w_y$ y sesgo $b$ inicializados aleatoriamente.</li>
+                        <li><strong>Perceptrón Activo:</strong> En cada paso de actualización, un Perceptrón se selecciona como "activo" de forma rotativa.</li>
+                        <li><strong>Predicción (por Perceptrón):</strong> $a_i = w_x x_i + w_y y_i + b$. Clase predicha $\hat{t}_i = \text{sign}(a_i)$.</li>
+                        <li><strong>Actualización (Regla del Perceptrón para el Activo):</strong> Si el Perceptrón activo clasifica mal un punto aleatorio:
+                            <div class="math-formula">$w_x \leftarrow w_x + \eta \cdot t_i \cdot x_i$</div>
+                            <div class="math-formula">$w_y \leftarrow w_y + \eta \cdot t_i \cdot y_i$</div>
+                            <div class="math-formula">$b \leftarrow b + \eta \cdot t_i$</div>
+                            (Solo se actualizan los pesos del Perceptrón activo).
+                        </li>
+                        <li><strong>Visualización:</strong> Se dibujan las líneas de decisión de todos los Perceptrones. La del activo se resalta.</li>
+                        <li><strong>Precisión:</strong> Se muestra la precisión del Perceptrón activo y la precisión promedio de todos.</li>
+                    </ol>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <footer class="text-center mt-12 mb-6">
+        <p class="text-sm text-gray-600">&copy; 2025 Explicación Interactiva de Retropropagación. Creado con fines educativos.</p>
+    </footer>
+
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script"></script>
+    <script src="main.js"></script>
+    <script src="examples.js"></script>
+</body>
+</html> 
